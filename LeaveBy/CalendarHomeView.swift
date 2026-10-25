@@ -74,6 +74,7 @@ enum EventStorage {
 }
 
 struct CalendarHomeView: View {
+    @AppStorage(LeaveByColors.themeKey) private var selectedTheme = "J"
     @AppStorage(FriendlyCopy.nameKey) private var preferredName = ""
     @AppStorage("didChooseName") private var didChooseName = false
     @State private var showingProfile = false
@@ -185,12 +186,14 @@ struct CalendarHomeView: View {
                 EventStorage.publishWidgets(events)
                 if !didChooseName { showingProfile = true }
             }
+            .onChange(of: selectedTheme) { _, _ in syncProfile() }
             .onChange(of: preferredName) { _, _ in syncProfile(refreshReminders: true) }
             .onChange(of: events) { _, value in EventStorage.save(value) }
         }
     }
 
     private func syncProfile(refreshReminders: Bool = false) {
+        UserDefaults(suiteName: WidgetStore.group)?.set(selectedTheme, forKey: LeaveByColors.themeKey)
         UserDefaults(suiteName: WidgetStore.group)?.set(FriendlyCopy.cleanName(preferredName), forKey: FriendlyCopy.nameKey)
         WidgetCenter.shared.reloadTimelines(ofKind: WidgetStore.kind)
         if refreshReminders { Task { await ReminderManager.refreshNames() } }

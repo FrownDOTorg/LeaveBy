@@ -5,18 +5,39 @@ controls, but keep the same hierarchy, colors, wording, and achievement catalog.
 The iOS and Android apps remain separate implementations.
 
 ## Visual language
-- Canvas: #101F36 deep navy; #1A2E49 rounded cards; #3A5272 borders.
-- Primary accent: #8DB6FF soft blue; raised surfaces: #243F62. Filled accent buttons use #101F36 text.
-- Text: #F1F5FC; secondary text: #B6C5DC; inputs: #14253E.
-- Positive: #8DE0C0 text on #1C3943; achievement surfaces: #3B3547; destructive text: #FFABBA.
+Use design/themes.json as the shared runtime palette for both apps and iOS widgets.
+
+| Role | R theme | J theme |
+| --- | --- | --- |
+| background | #101F36 | #202127 |
+| card | #1A2E49 | #2A2B34 |
+| field | #14253E | #23242D |
+| elevated | #243F62 | #393247 |
+| accent | #85AFF8 | #B89AE8 |
+| text | #F1F5FC | #F4F0FA |
+| muted | #B6C5DC | #C7BED5 |
+| border | #3A5272 | #555064 |
+| positive | #1C3943 | #293B38 |
+| achievement | #3B3547 | #3E334D |
+| success | #8DE0C0 | #A2DDC8 |
+| danger | #FFABBA | #F5A9BD |
+
+R theme preserves the navy design with slightly darker blue buttons. J theme is
+charcoal/dark gray with purple accents. J theme is the default when no preference
+is saved. Both stay dark regardless of system appearance. Filled accent buttons
+use the background color for labels to keep good contrast.
+
+Android: choose a Theme under Make it yours. iOS: open name/preferences, then
+Your colors. Selection persists locally. The iOS app shares it with widgets
+through its App Group. Android native dialog styles mirror the JSON palette
+in res/values/styles.xml.
+
 - Card corners: approximately 20 points/dp; fields 12; buttons 16.
-- Content should stay comfortable on a phone and centered on wide screens.
-- Make the next departure and countdown the strongest elements.
-- Keep the calendar compact and events individually scannable.
-- Give editing fields clear groups: plan, arrival, travel/buffer, departure.
-- Never communicate status only through color. Preserve readable text and
-  accessible native labels; allow text to wrap at larger sizes.
-- Both platforms use the navy theme regardless of the device appearance. Native controls, dialogs, forms, and iOS widgets follow the same roles.
+- Keep content comfortable on phones and centered on wide screens.
+- Emphasize the next departure and countdown; keep events easy to scan.
+- Group editor fields into plan, arrival, travel/buffer, and departure.
+- Never use color alone for status; preserve readable labels and wrapping text.
+- Theme changes do not alter plans, names, or reminder schedules.
 
 ## Voice
 Friendly, calm, practical, a little playful. Use the user's chosen first name or

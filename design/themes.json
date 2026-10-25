@@ -1,0 +1,32 @@
+{
+  "R": {
+    "name": "R theme",
+    "background": "#101F36",
+    "card": "#1A2E49",
+    "field": "#14253E",
+    "elevated": "#243F62",
+    "accent": "#85AFF8",
+    "text": "#F1F5FC",
+    "muted": "#B6C5DC",
+    "border": "#3A5272",
+    "positive": "#1C3943",
+    "achievement": "#3B3547",
+    "success": "#8DE0C0",
+    "danger": "#FFABBA"
+  },
+  "J": {
+    "name": "J theme",
+    "background": "#202127",
+    "card": "#2A2B34",
+    "field": "#23242D",
+    "elevated": "#393247",
+    "accent": "#B89AE8",
+    "text": "#F4F0FA",
+    "muted": "#C7BED5",
+    "border": "#555064",
+    "positive": "#293B38",
+    "achievement": "#3E334D",
+    "success": "#A2DDC8",
+    "danger": "#F5A9BD"
+  }
+}

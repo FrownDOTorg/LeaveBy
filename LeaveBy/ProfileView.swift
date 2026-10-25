@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @AppStorage(LeaveByColors.themeKey) private var selectedTheme = "J"
     @AppStorage(FriendlyCopy.nameKey) private var savedName = ""
     @AppStorage(Achievements.enabledKey) private var achievementNotifications = true
     @AppStorage("didChooseName") private var didChooseName = false
@@ -22,6 +23,15 @@ struct ProfileView: View {
                         }
                 } footer: {
                     Text("Your name stays on this device and is shared with LeaveBy's widgets. You can change or remove it anytime here. It may appear in notification previews.")
+                }
+                .listRowBackground(LeaveByColors.card)
+                Section("Your colors") {
+                    Picker("Theme", selection: $selectedTheme) {
+                        Text("R theme · Navy & blue").tag("R")
+                        Text("J theme · Charcoal & purple").tag("J")
+                    }
+                    Text("Pick the colors that feel like you. Your plans stay just as they are.")
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
                 .listRowBackground(LeaveByColors.card)
                 Section("A little celebration") {

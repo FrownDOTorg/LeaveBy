@@ -25,20 +25,31 @@ public class MainActivity extends Activity {
     };
 
     @Override public void onCreate(Bundle state) {
+        setTheme("R".equals(ThemePalette.selected(this)) ? R.style.Theme_LeaveBy_R : R.style.Theme_LeaveBy_J);
         super.onCreate(state);
+        if(state!=null)day.setTimeInMillis(state.getLong("selectedDay",System.currentTimeMillis()));
         home();
         if (!PlanStore.prefs(this).getBoolean("nameSet", false)) profile();
     }
     @Override protected void onResume() { super.onResume(); handler.post(tick); }
     @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
 
-    private static final int INK = Color.rgb(241, 245, 252);
-    private static final int MUTED = Color.rgb(182, 197, 220);
-    private static final int BLUE = Color.rgb(141, 182, 255);
-    private static final int LINE = Color.rgb(58, 82, 114);
-    private static final int BACKGROUND = Color.rgb(16,31,54);
-    private static final int SURFACE = Color.rgb(26,46,73);
-    private static final int ELEVATED = Color.rgb(36,63,98);
+    private int INK, MUTED, BLUE, LINE, BACKGROUND, SURFACE, ELEVATED, FIELD, POSITIVE, ACHIEVEMENT, SUCCESS, DANGER;
+    private void applyPalette() {
+        ThemePalette palette=ThemePalette.load(this);
+        INK=palette.color("text","#F4F0FA");
+        MUTED=palette.color("muted","#C7BED5");
+        BLUE=palette.color("accent","#B89AE8");
+        LINE=palette.color("border","#555064");
+        BACKGROUND=palette.color("background","#202127");
+        SURFACE=palette.color("card","#2A2B34");
+        ELEVATED=palette.color("elevated","#393247");
+        FIELD=palette.color("field","#23242D");
+        POSITIVE=palette.color("positive","#293B38");
+        ACHIEVEMENT=palette.color("achievement","#3E334D");
+        SUCCESS=palette.color("success","#A2DDC8");
+        DANGER=palette.color("danger","#F5A9BD");
+    }
     private LinearLayout rootPage;
     private TextView homeCountdown;
     private long homeDeparture;
@@ -52,10 +63,11 @@ public class MainActivity extends Activity {
         return bg;
     }
     private android.graphics.drawable.RippleDrawable ripple(int fill, int border) {
-        return new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x22416BDF),
+        return new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf((BLUE & 0x00FFFFFF) | 0x33000000),
             rounded(fill, 16, border), rounded(Color.WHITE, 16, 0));
     }
     private void page(String heading) {
+        applyPalette();
         LinearLayout outer = new LinearLayout(this);
         outer.setOrientation(LinearLayout.VERTICAL); outer.setBackgroundColor(BACKGROUND);
         outer.setOnApplyWindowInsetsListener((v, insets) -> {
@@ -112,7 +124,7 @@ public class MainActivity extends Activity {
         EditText e=new EditText(this); e.setSingleLine(true); e.setText(value); e.setTextSize(16); e.setTextColor(INK);
         e.setInputType(number?android.text.InputType.TYPE_CLASS_NUMBER:
             android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        e.setPadding(dp(14),dp(12),dp(14),dp(12)); e.setBackground(rounded(Color.rgb(20,37,62),12,LINE));
+        e.setPadding(dp(14),dp(12),dp(14),dp(12)); e.setBackground(rounded(FIELD,12,LINE));
         page.addView(e,new LinearLayout.LayoutParams(-1,dp(50))); return e;
     }
     private String when(long instant) { return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(instant)); }
@@ -141,7 +153,7 @@ public class MainActivity extends Activity {
             primary("View your plan",()->edit(upcoming));
             endCard();
         } else {
-            beginCard(Color.rgb(28,57,67));
+            beginCard(POSITIVE);
             text("Room for something good",22,true);
             caption("Pick a day below and plan your next outing.");
             endCard();
@@ -171,7 +183,7 @@ public class MainActivity extends Activity {
         for(Plan plan:PlanStore.all(this))if(sameDay(plan.arrival))plansOnDay++;
         Achievements.Badge badge=Achievements.badge(this,plansOnDay,day.getTimeInMillis());
         if(badge!=null) {
-            beginCard(Color.rgb(59,53,71));
+            beginCard(ACHIEVEMENT);
             text("DAILY ACHIEVEMENT",11,true).setTextColor(BLUE);
             text(badge.title,22,true);caption(badge.body);endCard();
         }
@@ -195,6 +207,7 @@ public class MainActivity extends Activity {
             caption("Nothing planned for this day. Add something to look forward to.");endCard();
         }
         sectionTitle("MAKE IT YOURS");
+        button("Theme: "+ThemePalette.selected(this)+" theme",this::chooseTheme);
         Switch achievements=new Switch(this);
         achievements.setText("Playful achievement notifications");
         achievements.setTextSize(14);achievements.setTextColor(INK);achievements.setMinHeight(dp(48));
@@ -218,11 +231,25 @@ public class MainActivity extends Activity {
         caption("Leave "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(p.departure()))+
             "  ·  "+p.travel+" min travel  ·  "+p.buffer+" min extra");
         TextView state=text(p.reminder && p.departure()>System.currentTimeMillis()?"Reminder set":"Tap to view your plan",12,false);
-        state.setTextColor(p.reminder?Color.rgb(141,224,192):MUTED);
+        state.setTextColor(p.reminder?SUCCESS:MUTED);
         card.setBackground(ripple(SURFACE,LINE));card.setOnClickListener(v->edit(p));
         card.setContentDescription(p.title+", arrive "+when(p.arrival)+". Open plan");
         endCard();
     }
+    private void chooseTheme() {
+        String[] choices={"R theme · Navy & blue","J theme · Charcoal & purple"};
+        int checked="R".equals(ThemePalette.selected(this))?0:1;
+        new AlertDialog.Builder(this).setTitle("Make it your own")
+            .setSingleChoiceItems(choices,checked,(dialog,index)->{
+                PlanStore.prefs(this).edit().putString("appearanceTheme",index==0?"R":"J").apply();
+                dialog.dismiss();recreate();
+            }).setNegativeButton("Keep current theme",null).show();
+    }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        state.putLong("selectedDay",day.getTimeInMillis());
+        super.onSaveInstanceState(state);
+    }
+
     private void profile() {
         EditText field = new EditText(this); field.setSingleLine(true); field.setHint("Your name or nickname");
         field.setText(PlanStore.name(this)); field.setFilters(new InputFilter[]{new InputFilter.LengthFilter(80)});
@@ -288,7 +315,7 @@ public class MainActivity extends Activity {
         if (PlanStore.find(this,plan.id)!=null) button("Delete plan", () ->
             new AlertDialog.Builder(this).setTitle("Delete this plan?").setMessage("This also clears its departure reminder.")
             .setPositiveButton("Delete",(d,w)->{ReminderReceiver.cancel(this,plan.id);PlanStore.delete(this,plan.id);home();})
-            .setNegativeButton("Keep it",null).show()).setTextColor(Color.rgb(255,171,186));
+            .setNegativeButton("Keep it",null).show()).setTextColor(DANGER);
         updateCountdown();
     }
 

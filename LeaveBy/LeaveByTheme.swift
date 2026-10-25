@@ -2,18 +2,22 @@ import SwiftUI
 import UIKit
 
 enum LeaveByTheme {
-    static let accent = LeaveByColors.accent
-    static let background = LeaveByColors.background
-    static let softBlue = LeaveByColors.elevated
+    static var accent: Color { LeaveByColors.accent }
+    static var background: Color { LeaveByColors.background }
+    static var softBlue: Color { LeaveByColors.elevated }
 }
-extension View {
-    func leaveByColors() -> some View {
-        self.scrollContentBackground(.hidden)
-            .background(LeaveByColors.background)
-            .foregroundStyle(LeaveByColors.text)
-            .tint(LeaveByColors.accent)
+private struct LeaveByAppearance: ViewModifier {
+    @AppStorage(LeaveByColors.themeKey) private var selectedTheme = "J"
+    func body(content: Content) -> some View {
+        content.scrollContentBackground(.hidden)
+            .background(LeaveByColors.color("background", theme: selectedTheme))
+            .foregroundStyle(LeaveByColors.color("text", theme: selectedTheme))
+            .tint(LeaveByColors.color("accent", theme: selectedTheme))
             .preferredColorScheme(.dark)
     }
+}
+extension View {
+    func leaveByColors() -> some View { modifier(LeaveByAppearance()) }
 }
 
 struct AchievementCard: View {
