@@ -22,17 +22,17 @@ enum LeaveByColors {
     }
     private static let fallback: [String: String] = [
         "name": "J theme",
-        "background": "#202127",
-        "card": "#2A2B34",
-        "field": "#23242D",
-        "elevated": "#393247",
-        "accent": "#B89AE8",
+        "background": "#18191F",
+        "card": "#22232C",
+        "field": "#1B1C25",
+        "elevated": "#2C2538",
+        "accent": "#A181D8",
         "text": "#F4F0FA",
         "muted": "#C7BED5",
-        "border": "#555064",
-        "positive": "#293B38",
-        "achievement": "#3E334D",
-        "success": "#A2DDC8",
+        "border": "#494457",
+        "positive": "#2A2536",
+        "achievement": "#32283E",
+        "success": "#B29BDA",
         "danger": "#F5A9BD"
     ]
     static var background: Color { color("background") }

@@ -16,14 +16,14 @@
         <item name="android:navigationBarColor">#101F36</item>
     </style>
     <style name="Theme.LeaveBy.J" parent="Theme.LeaveBy">
-        <item name="android:colorAccent">#B89AE8</item>
-        <item name="android:colorBackground">#202127</item>
-        <item name="android:windowBackground">#202127</item>
-        <item name="android:colorBackgroundFloating">#2A2B34</item>
+        <item name="android:colorAccent">#A181D8</item>
+        <item name="android:colorBackground">#18191F</item>
+        <item name="android:windowBackground">#18191F</item>
+        <item name="android:colorBackgroundFloating">#22232C</item>
         <item name="android:textColorPrimary">#F4F0FA</item>
         <item name="android:textColorSecondary">#C7BED5</item>
         <item name="android:textColorHint">#C7BED5</item>
-        <item name="android:statusBarColor">#202127</item>
-        <item name="android:navigationBarColor">#202127</item>
+        <item name="android:statusBarColor">#18191F</item>
+        <item name="android:navigationBarColor">#18191F</item>
     </style>
 </resources>

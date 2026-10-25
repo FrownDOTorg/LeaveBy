@@ -9,17 +9,17 @@ Use design/themes.json as the shared runtime palette for both apps and iOS widge
 
 | Role | R theme | J theme |
 | --- | --- | --- |
-| background | #101F36 | #202127 |
-| card | #1A2E49 | #2A2B34 |
-| field | #14253E | #23242D |
-| elevated | #243F62 | #393247 |
-| accent | #85AFF8 | #B89AE8 |
+| background | #101F36 | #18191F |
+| card | #1A2E49 | #22232C |
+| field | #14253E | #1B1C25 |
+| elevated | #243F62 | #2C2538 |
+| accent | #85AFF8 | #A181D8 |
 | text | #F1F5FC | #F4F0FA |
 | muted | #B6C5DC | #C7BED5 |
-| border | #3A5272 | #555064 |
-| positive | #1C3943 | #293B38 |
-| achievement | #3B3547 | #3E334D |
-| success | #8DE0C0 | #A2DDC8 |
+| border | #3A5272 | #494457 |
+| positive | #1C304D | #2A2536 |
+| achievement | #24354E | #32283E |
+| success | #9BBEFF | #B29BDA |
 | danger | #FFABBA | #F5A9BD |
 
 R theme preserves the navy design with slightly darker blue buttons. J theme is

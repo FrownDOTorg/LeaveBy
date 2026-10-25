@@ -39,15 +39,15 @@ public class MainActivity extends Activity {
         ThemePalette palette=ThemePalette.load(this);
         INK=palette.color("text","#F4F0FA");
         MUTED=palette.color("muted","#C7BED5");
-        BLUE=palette.color("accent","#B89AE8");
-        LINE=palette.color("border","#555064");
-        BACKGROUND=palette.color("background","#202127");
-        SURFACE=palette.color("card","#2A2B34");
-        ELEVATED=palette.color("elevated","#393247");
-        FIELD=palette.color("field","#23242D");
-        POSITIVE=palette.color("positive","#293B38");
-        ACHIEVEMENT=palette.color("achievement","#3E334D");
-        SUCCESS=palette.color("success","#A2DDC8");
+        BLUE=palette.color("accent","#A181D8");
+        LINE=palette.color("border","#494457");
+        BACKGROUND=palette.color("background","#18191F");
+        SURFACE=palette.color("card","#22232C");
+        ELEVATED=palette.color("elevated","#2C2538");
+        FIELD=palette.color("field","#1B1C25");
+        POSITIVE=palette.color("positive","#2A2536");
+        ACHIEVEMENT=palette.color("achievement","#32283E");
+        SUCCESS=palette.color("success","#B29BDA");
         DANGER=palette.color("danger","#F5A9BD");
     }
     private LinearLayout rootPage;
