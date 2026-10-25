@@ -27,6 +27,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription: "LeaveBy reads your calendars so you can choose events to copy into your departure planner. Your original events are not changed."
   LeaveByWidgets:
     type: app-extension
     platform: iOS

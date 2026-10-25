@@ -12,6 +12,8 @@ struct EventPlan: Codable, Identifiable, Equatable {
     var destinationJSON = ""
     var walking = false
     var useMaps = true
+    var importedOccurrenceKey: String?
+    var importedLocation: String?
     var mapsDepartureTimestamp: Double?
     var mapsEstimateSignature: String?
 
@@ -75,6 +77,7 @@ struct CalendarHomeView: View {
     @State private var day = Date()
     @State private var selected: EventPlan?
     @State private var deleting: EventPlan?
+    @State private var importing = false
 
     private var dayEvents: [EventPlan] {
         events.filter { Calendar.current.isDate($0.arrival, inSameDayAs: day) }
@@ -111,7 +114,7 @@ struct CalendarHomeView: View {
                     }
                 }
                 Section {
-                    Text("Events are saved on this device in LeaveBy. Apple Calendar import will follow. Widgets show the next saved departure.")
+                    Text("Events are saved on this device in LeaveBy. Use Import to copy events from Apple Calendar. Widgets show the next saved departure.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -121,6 +124,9 @@ struct CalendarHomeView: View {
                     Button("Today") { day = .now }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Button("Import") { importing = true }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { addEvent() } label: { Image(systemName: "plus") }
                         .accessibilityLabel("Add event on selected day")
                 }
@@ -128,6 +134,15 @@ struct CalendarHomeView: View {
             .sheet(item: $selected) { event in
                 PlannerView(plan: binding(for: event)).id(event.id)
                     .interactiveDismissDisabled()
+            }
+            .sheet(isPresented: $importing) {
+                CalendarImportView(day: day, existingKeys: Set(events.compactMap(\.importedOccurrenceKey))) { incoming in
+                    let existing = Set(events.compactMap(\.importedOccurrenceKey))
+                    events.append(contentsOf: incoming.filter { event in
+                        guard let key = event.importedOccurrenceKey else { return true }
+                        return !existing.contains(key)
+                    })
+                }
             }
             .alert("Delete event?", isPresented: Binding(
                 get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {

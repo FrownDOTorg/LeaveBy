@@ -2,7 +2,7 @@
 A native SwiftUI departure planner for iOS 17 and later.
 
 ## First milestone
-Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Departure reminders are available with notification permission. A built-in calendar supports multiple locally saved events. Apple Calendar import is not implemented yet. Home and Lock Screen widget code is included; device validation is pending.
+Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Departure reminders are available with notification permission. A built-in calendar supports multiple locally saved events. Apple Calendar import copies selected timed events from the selected day. Home and Lock Screen widget code is included; device validation is pending.
 
 ## Build from Windows
 Commit and push with GitHub Desktop. The Build iOS workflow uses a standard
@@ -55,7 +55,7 @@ on first launch of this version; any legacy reminder must be set again.
 Each event has independent places, travel mode, buffer, and notification identity.
 Maps estimates are intentionally not persisted; recalculate when reopening an event.
 An already scheduled reminder remains until the plan changes or is recalculated.
-This calendar does not yet read or write the iPhone's Apple Calendar.
+Use Import to read selected-day events from Apple Calendar; original events are never modified.
 
 Device checks: create two events on different dates, edit and reopen both, restart
 the app to verify persistence, schedule independent reminders, and delete one to
@@ -81,3 +81,22 @@ No signing credentials belong in the repository.
 On-device checks after enrollment: launch LeaveBy, create a manual future trip,
 add each widget size, then verify a Maps trip, empty state, countdown at departure,
 next-event transition, edit/delete propagation, relaunch, and Lock Screen privacy.
+
+## Apple Calendar import
+On the selected day, tap Import, then Load events from Apple Calendar. iOS 17+
+requires Full Access for reading existing events; the purpose string is configured
+only on the main app target. This implementation never writes to EventKit.
+Select events and tap Import. Already imported occurrences are disabled, keyed by
+calendar item identifier plus start timestamp, so recurring dates stay distinct.
+Calendar account resyncs or rescheduled originals may change those keys; imports
+are independent copies, not ongoing sync. All-day events and events starting on
+other days are excluded. Existing timed events in calendars available on the
+phone are supported, not just iCloud calendars.
+
+Imported location text seeds destination search. Confirm a real place in Maps and
+choose a starting point before calculating. Event notes, attendees, meeting links,
+and original alarms are not imported. No departure reminders are set automatically.
+
+Device validation: permission allow/deny and recovery, empty day, two selected
+imports, repeat import prevention, recurring occurrences on separate dates,
+location search, deletion and reimport, and verifying original events stay intact.

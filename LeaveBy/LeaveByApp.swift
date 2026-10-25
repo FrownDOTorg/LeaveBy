@@ -93,6 +93,15 @@ struct PlannerView: View {
                 Section("Your next event") {
                     TextField("Event name", text: $plan.title)
                     DatePicker("Arrive by", selection: arrival)
+                    if plan.importedOccurrenceKey != nil {
+                        Text("Copied from Apple Calendar. Changes here do not update the original.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let location = plan.importedLocation, destination == nil {
+                        Text("Calendar location: \(location)").font(.caption)
+                        Text("Tap To to find and confirm this place in Apple Maps.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 Section("Travel") {
                     Toggle("Use Apple Maps estimate", isOn: $plan.useMaps)
@@ -164,7 +173,7 @@ struct PlannerView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
-                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Widgets show the next saved departure. Apple Calendar import will follow.")
+                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Widgets show the next saved departure. Use Import in the calendar to copy existing events.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -182,7 +191,7 @@ struct PlannerView: View {
                 PlacePicker(title: "Starting point") { originJSON = $0.encoded }
             }
             .sheet(isPresented: $choosingDestination) {
-                PlacePicker(title: "Destination") { destinationJSON = $0.encoded }
+                PlacePicker(title: "Destination", initialQuery: plan.importedLocation ?? "") { destinationJSON = $0.encoded }
             }
             .onChange(of: signature) { _, _ in estimate = nil; errorMessage = nil }
         }

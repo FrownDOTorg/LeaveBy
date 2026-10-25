@@ -10,6 +10,12 @@ struct PlacePicker: View {
     @State private var searching = false
     @State private var message: String?
 
+    init(title: String, initialQuery: String = "", onSelect: @escaping (SavedPlace) -> Void) {
+        self.title = title
+        self.onSelect = onSelect
+        self._query = State(initialValue: initialQuery)
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -63,4 +69,3 @@ struct PlacePicker: View {
         }
     }
 }
-
