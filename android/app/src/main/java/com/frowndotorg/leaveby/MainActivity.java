@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
     private TextView text(String value, int size, boolean bold) {
         TextView t = new TextView(this); t.setText(value); t.setTextSize(size);
         t.setTextColor(Color.rgb(30,41,65)); t.setPadding(0,dp(8),0,dp(8));
-        if (bold) t.setTypeface(null, 1);
+        if (bold) t.setTypeface(null, android.graphics.Typeface.BOLD);
         page.addView(t); return t;
     }
     private Button button(String label, Runnable action) {
