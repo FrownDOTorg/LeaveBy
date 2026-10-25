@@ -24,7 +24,7 @@ Use design/themes.json as the shared runtime palette for both apps and iOS widge
 
 R theme preserves the navy design with slightly darker blue buttons. J theme is
 charcoal/dark gray with purple accents. J theme is the default when no preference
-is saved. Both stay dark regardless of system appearance. Filled accent buttons
+is saved. R and J stay dark; the additional Light mode uses light surfaces. Filled accent buttons
 use the background color for labels to keep good contrast.
 
 Android: choose a Theme under Make it yours. iOS: open name/preferences, then
@@ -88,3 +88,19 @@ On-device checks: 4->5, 7->8, and 11->12 plans; random-but-stable wording; chose
 name and no-name fallback; editing/reopening without repeats; another date;
 deletion/re-addition; import batches; denied permission; muted achievements with
 departure reminders still working. Test iOS separately once signing is ready.
+
+## Readability and extra appearance modes
+Light and Dark are additional blue-button modes alongside saved R and J themes.
+Selection persists; an existing R/J choice is preserved. Light uses pale surfaces
+and blue buttons with white labels; Dark uses slate surfaces and blue accents.
+The palette source remains themes.json, including an onAccent role for button
+labels. Android native picker/dialog styles and widget surfaces mirror it.
+
+Android text is larger throughout, with taller buttons, tabs, calendar chips,
+and text fields. Fields can grow vertically with system font scaling. iOS uses
+a larger minimum Dynamic Type size while preserving larger accessibility sizes.
+The single-plan/reminder wording observed in emulator testing is corrected.
+
+Do not reveal achievement milestones in onboarding or Settings. The optional
+toggle uses the neutral label Extra notifications. Earned achievements still
+appear normally; the surprises and random messages remain active.

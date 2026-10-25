@@ -13,7 +13,8 @@ private struct LeaveByAppearance: ViewModifier {
             .background(LeaveByColors.color("background", theme: selectedTheme))
             .foregroundStyle(LeaveByColors.color("text", theme: selectedTheme))
             .tint(LeaveByColors.color("accent", theme: selectedTheme))
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(selectedTheme == "Light" ? .light : .dark)
+            .dynamicTypeSize(.xLarge ... .accessibility5)
     }
 }
 extension View {

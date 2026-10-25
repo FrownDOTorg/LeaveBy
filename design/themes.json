@@ -12,7 +12,8 @@
     "positive": "#1C304D",
     "achievement": "#24354E",
     "success": "#9BBEFF",
-    "danger": "#FFABBA"
+    "danger": "#FFABBA",
+    "onAccent": "#101F36"
   },
   "J": {
     "name": "J theme",
@@ -27,6 +28,39 @@
     "positive": "#2A2536",
     "achievement": "#32283E",
     "success": "#B29BDA",
-    "danger": "#F5A9BD"
+    "danger": "#F5A9BD",
+    "onAccent": "#18191F"
+  },
+  "Light": {
+    "name": "Light",
+    "background": "#F3F6FC",
+    "card": "#FFFFFF",
+    "field": "#F4F6FA",
+    "elevated": "#E7EEFF",
+    "accent": "#315EC4",
+    "onAccent": "#FFFFFF",
+    "text": "#19263C",
+    "muted": "#52627A",
+    "border": "#A9B8CD",
+    "positive": "#E7EEFF",
+    "achievement": "#E7EEFF",
+    "success": "#315EC4",
+    "danger": "#B1324E"
+  },
+  "Dark": {
+    "name": "Dark",
+    "background": "#191E27",
+    "card": "#242C38",
+    "field": "#1D2531",
+    "elevated": "#293B55",
+    "accent": "#85AFF8",
+    "onAccent": "#101F36",
+    "text": "#F1F5FC",
+    "muted": "#BCC9DC",
+    "border": "#4A5C74",
+    "positive": "#293B55",
+    "achievement": "#293B55",
+    "success": "#9BBEFF",
+    "danger": "#FFABBA"
   }
 }

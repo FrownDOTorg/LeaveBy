@@ -25,7 +25,7 @@ public class DepartureWidget extends AppWidgetProvider {
         ThemePalette palette=ThemePalette.load(c);
         for(int id:ids) {
             RemoteViews view=new RemoteViews(c.getPackageName(),R.layout.departure_widget);
-            view.setInt(R.id.widget_root,"setBackgroundResource","R".equals(ThemePalette.selected(c))?R.drawable.widget_r:R.drawable.widget_j);
+            view.setInt(R.id.widget_root,"setBackgroundResource",ThemePalette.widgetBackground(c));
             view.setTextColor(R.id.widget_heading,palette.color("accent","#A181D8"));
             view.setTextColor(R.id.widget_title,palette.color("text","#F4F0FA"));
             view.setTextColor(R.id.widget_timer,palette.color("accent","#A181D8"));
@@ -58,4 +58,3 @@ public class DepartureWidget extends AppWidgetProvider {
     }
     @Override public void onDisabled(Context c){((AlarmManager)c.getSystemService(Context.ALARM_SERVICE)).cancel(refresh(c));}
 }
-

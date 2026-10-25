@@ -11,7 +11,7 @@ enum LeaveByColors {
     static var selectedID: String {
         let saved = UserDefaults.standard.string(forKey: themeKey)
             ?? UserDefaults(suiteName: WidgetStore.group)?.string(forKey: themeKey) ?? "J"
-        return saved == "R" ? "R" : "J"
+        return ["R", "J", "Light", "Dark"].contains(saved) ? saved : "J"
     }
     static func color(_ role: String, theme: String? = nil) -> Color {
         let hex = themes[theme ?? selectedID]?[role] ?? fallback[role] ?? "#F4F0FA"

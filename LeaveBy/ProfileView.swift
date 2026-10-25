@@ -29,15 +29,15 @@ struct ProfileView: View {
                     Picker("Theme", selection: $selectedTheme) {
                         Text("R theme · Navy & blue").tag("R")
                         Text("J theme · Charcoal & purple").tag("J")
+                        Text("Light mode · Blue buttons").tag("Light")
+                        Text("Dark mode · Blue buttons").tag("Dark")
                     }
                     Text("Pick the colors that feel like you. Your plans stay just as they are.")
                         .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
                 .listRowBackground(LeaveByColors.card)
-                Section("A little celebration") {
-                    Toggle("Playful achievement notifications", isOn: $achievementNotifications)
-                    Text("Unlock a random badge at 5, 8, 12, 20, and 30 plans in a day. Uses notification permission you've already allowed; your departure reminders stay separate.")
-                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
+                Section("More notifications") {
+                    Toggle("Extra notifications", isOn: $achievementNotifications)
                 }
                 .listRowBackground(LeaveByColors.card)
                 Section {

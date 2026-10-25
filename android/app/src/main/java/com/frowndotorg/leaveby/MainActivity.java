@@ -29,7 +29,7 @@ public class MainActivity extends Activity {
     };
 
     @Override public void onCreate(Bundle state) {
-        setTheme("R".equals(ThemePalette.selected(this)) ? R.style.Theme_LeaveBy_R : R.style.Theme_LeaveBy_J);
+        setTheme(ThemePalette.style(this));
         super.onCreate(state);
         if(state!=null) { day.setTimeInMillis(state.getLong("selectedDay",System.currentTimeMillis())); activeTab=state.getString("activeTab","Home"); }
         home();
@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
     @Override protected void onResume() { super.onResume(); handler.post(tick); if(!editing)home(); }
     @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
 
-    private int INK, MUTED, BLUE, LINE, BACKGROUND, SURFACE, ELEVATED, FIELD, POSITIVE, ACHIEVEMENT, SUCCESS, DANGER;
+    private int INK, MUTED, BLUE, LINE, BACKGROUND, SURFACE, ELEVATED, FIELD, POSITIVE, ACHIEVEMENT, SUCCESS, DANGER, ON_ACCENT;
     private void applyPalette() {
         ThemePalette palette=ThemePalette.load(this);
         INK=palette.color("text","#F4F0FA");
@@ -55,6 +55,7 @@ public class MainActivity extends Activity {
         ACHIEVEMENT=palette.color("achievement","#32283E");
         SUCCESS=palette.color("success","#B29BDA");
         DANGER=palette.color("danger","#F5A9BD");
+        ON_ACCENT=palette.color("onAccent","#18191F");
     }
     private LinearLayout rootPage;
     private TextView homeCountdown;
@@ -94,7 +95,7 @@ public class MainActivity extends Activity {
         text(heading,30,true);
     }
     private TextView label(String value, int size, boolean bold) {
-        TextView t = new TextView(this); t.setText(value); t.setTextSize(size);
+        TextView t = new TextView(this); t.setText(value); t.setTextSize(size<=14?size+3:size+2);
         t.setTextColor(INK); t.setFontFeatureSettings("kern");
         if (bold) t.setTypeface(null, android.graphics.Typeface.BOLD);
         return t;
@@ -117,22 +118,23 @@ public class MainActivity extends Activity {
     private void endCard() { page=rootPage; }
     private Button button(String value,Runnable action) {
         Button b=new Button(this); b.setText(value); b.setAllCaps(false); b.setTextColor(BLUE);
-        b.setTextSize(15); b.setTypeface(null,android.graphics.Typeface.BOLD);
-        b.setPadding(dp(14),dp(12),dp(14),dp(12)); b.setMinHeight(dp(50));
+        b.setTextSize(18); b.setTypeface(null,android.graphics.Typeface.BOLD);
+        b.setPadding(dp(14),dp(12),dp(14),dp(12)); b.setMinHeight(dp(58));
         b.setBackground(ripple(SURFACE,LINE));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(5),0,dp(5));
         page.addView(b,lp); b.setOnClickListener(v->action.run()); return b;
     }
     private Button primary(String value,Runnable action) {
-        Button b=button(value,action); b.setBackground(ripple(BLUE,0)); b.setTextColor(BACKGROUND); return b;
+        Button b=button(value,action); b.setBackground(ripple(BLUE,0)); b.setTextColor(ON_ACCENT); return b;
     }
     private EditText input(String title,String value,boolean number) {
-        TextView titleView=text(title,13,true); titleView.setPadding(0,dp(12),0,dp(6));
-        EditText e=new EditText(this); e.setSingleLine(true); e.setText(value); e.setTextSize(16); e.setTextColor(INK);
+        TextView titleView=text(title,15,true); titleView.setPadding(0,dp(12),0,dp(6));
+        EditText e=new EditText(this); e.setSingleLine(true); e.setText(value); e.setTextSize(19); e.setTextColor(INK);
         e.setInputType(number?android.text.InputType.TYPE_CLASS_NUMBER:
             android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         e.setPadding(dp(14),dp(12),dp(14),dp(12)); e.setBackground(rounded(FIELD,12,LINE));
-        page.addView(e,new LinearLayout.LayoutParams(-1,dp(50))); return e;
+        e.setMinHeight(dp(60));
+        page.addView(e,new LinearLayout.LayoutParams(-1,-2)); return e;
     }
     private String when(long instant) { return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(instant)); }
     private boolean sameDay(long instant) {
@@ -154,7 +156,7 @@ public class MainActivity extends Activity {
             name.setPadding(0,dp(4),0,0);item.addView(name);
             item.setBackground(ripple(selected?ELEVATED:SURFACE,0));item.setSelected(selected);
             item.setContentDescription(tab+(selected?", selected":" tab"));
-            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(58),1);lp.setMargins(dp(3),0,dp(3),0);bar.addView(item,lp);
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(68),1);lp.setMargins(dp(3),0,dp(3),0);bar.addView(item,lp);
             item.setOnClickListener(v->{activeTab=tab;home();});
         }
         return bar;
@@ -194,7 +196,7 @@ public class MainActivity extends Activity {
             caption("Your next outing starts with a little plan.");endCard();
         }
         beginCard(SURFACE);
-        text(today+" plans today  ·  "+reminders+" reminders ready",16,true);
+        text(today+(today==1?" plan":" plans")+" today  ·  "+reminders+(reminders==1?" reminder":" reminders")+" ready",16,true);
         caption("A clear view of where you're headed.");endCard();
         primary("+  Plan something",()->{day=Calendar.getInstance();addPlan();});
         Achievements.Badge badge=Achievements.badge(this,today,now);
@@ -227,8 +229,8 @@ public class MainActivity extends Activity {
             boolean active=date.get(Calendar.DAY_OF_YEAR)==day.get(Calendar.DAY_OF_YEAR) && date.get(Calendar.YEAR)==day.get(Calendar.YEAR);
             TextView chip=label(new java.text.SimpleDateFormat("EE",Locale.getDefault()).format(date.getTime())+"\n"+date.get(Calendar.DAY_OF_MONTH),12,active);
             chip.setGravity(Gravity.CENTER); chip.setLineSpacing(dp(5),1);
-            chip.setTextColor(active?BACKGROUND:MUTED); chip.setBackground(ripple(active?BLUE:SURFACE,active?0:LINE));
-            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(64),1); lp.setMargins(dp(2),dp(6),dp(2),dp(6));
+            chip.setTextColor(active?ON_ACCENT:MUTED); chip.setBackground(ripple(active?BLUE:SURFACE,active?0:LINE));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(74),1); lp.setMargins(dp(2),dp(6),dp(2),dp(6));
             week.addView(chip,lp); chip.setContentDescription(DateFormat.getDateInstance(DateFormat.FULL).format(date.getTime()));
             chip.setOnClickListener(v->{day=(Calendar)date.clone();showEarlier=false;home();});
         }
@@ -265,8 +267,8 @@ public class MainActivity extends Activity {
         LinearLayout row=new LinearLayout(this);
         for(int i=0;i<filters.length;i++) {
             final int selected=i;TextView chip=label(filters[i],12,planFilter==i);chip.setGravity(Gravity.CENTER);
-            chip.setTextColor(planFilter==i?BACKGROUND:MUTED);chip.setBackground(ripple(planFilter==i?BLUE:SURFACE,LINE));
-            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(48),1);lp.setMargins(dp(2),dp(10),dp(2),dp(8));row.addView(chip,lp);
+            chip.setTextColor(planFilter==i?ON_ACCENT:MUTED);chip.setBackground(ripple(planFilter==i?BLUE:SURFACE,LINE));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(58),1);lp.setMargins(dp(2),dp(10),dp(2),dp(8));row.addView(chip,lp);
             chip.setOnClickListener(v->{planFilter=selected;plansScreen();});
         }
         page.addView(row);
@@ -296,15 +298,15 @@ public class MainActivity extends Activity {
     private void settingsScreen() {
         page("Make it yours");caption("Your colors, your reminders, your pace.");
         sectionTitle("YOU");button("Name: "+(PlanStore.name(this).isEmpty()?"Choose a nickname":PlanStore.name(this)),this::profile);
-        sectionTitle("APPEARANCE");button("Theme: "+ThemePalette.selected(this)+" theme",this::chooseTheme);
+        sectionTitle("APPEARANCE");button("Theme: "+ThemePalette.label(this),this::chooseTheme);
         sectionTitle("REMINDERS");
         button("Open notification settings",()->startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()))));
         button("Send a test notification",()->requestNotification(new Plan(),true));
-        Switch achievements=new Switch(this);achievements.setText("Playful achievement notifications");
-        achievements.setTextColor(INK);achievements.setTextSize(14);achievements.setMinHeight(dp(48));
+        Switch achievements=new Switch(this);achievements.setText("Extra notifications");
+        achievements.setTextColor(INK);achievements.setTextSize(18);achievements.setMinHeight(dp(58));
         achievements.setChecked(PlanStore.prefs(this).getBoolean("achievementNotifications",true));
         achievements.setOnCheckedChangeListener((v,checked)->PlanStore.prefs(this).edit().putBoolean("achievementNotifications",checked).apply());
-        page.addView(achievements);caption("A surprise at 5, 8, 12, 20, and 30 daily plans. Departure reminders stay separate.");
+        page.addView(achievements);
         sectionTitle("YOUR HOME SCREEN");button("Add a departure widget",this::addWidget);
         sectionTitle("ABOUT YOUR PLANS");
         beginCard(SURFACE);text("Saved on this device",17,true);
@@ -385,11 +387,12 @@ public class MainActivity extends Activity {
         endCard();
     }
     private void chooseTheme() {
-        String[] choices={"R theme · Navy & blue","J theme · Charcoal & purple"};
-        int checked="R".equals(ThemePalette.selected(this))?0:1;
+        String[] ids={"R","J","Light","Dark"};
+        String[] choices={"R theme · Navy & blue","J theme · Charcoal & purple","Light mode · Blue buttons","Dark mode · Blue buttons"};
+        int checked=java.util.Arrays.asList(ids).indexOf(ThemePalette.selected(this));
         new AlertDialog.Builder(this).setTitle("Make it your own")
             .setSingleChoiceItems(choices,checked,(dialog,index)->{
-                PlanStore.prefs(this).edit().putString("appearanceTheme",index==0?"R":"J").apply();
+                PlanStore.prefs(this).edit().putString("appearanceTheme",ids[index]).apply();
                 dialog.dismiss();DepartureWidget.update(this);recreate();
             }).setNegativeButton("Keep current theme",null).show();
     }
@@ -400,7 +403,7 @@ public class MainActivity extends Activity {
     }
 
     private void profile() {
-        EditText field = new EditText(this); field.setSingleLine(true); field.setHint("Your name or nickname");
+        EditText field = new EditText(this); field.setTextSize(19); field.setSingleLine(true); field.setHint("Your name or nickname");
         field.setText(PlanStore.name(this)); field.setFilters(new InputFilter[]{new InputFilter.LengthFilter(80)});
         new AlertDialog.Builder(this).setTitle("What should we call you?")
             .setMessage("A first name or nickname is perfect. It stays on this device and may appear in notification previews.")
@@ -422,7 +425,7 @@ public class MainActivity extends Activity {
         destination = input("Destination (optional)",plan.destination,false);
         notes=input("Notes (optional)",plan.notes,false);
         walking=plan.walking;
-        Switch mode=new Switch(this);mode.setText("Walking instead of driving");mode.setTextColor(INK);mode.setMinHeight(dp(48));mode.setChecked(walking);
+        Switch mode=new Switch(this);mode.setText("Walking instead of driving");mode.setTextColor(INK);mode.setMinHeight(dp(58));mode.setTextSize(18);mode.setChecked(walking);
         mode.setOnCheckedChangeListener((view,checked)->walking=checked);page.addView(mode);
         button("Open directions",this::openDirections);
         caption("Directions open in Maps or your browser. Enter the travel estimate below; it won't update automatically.");
