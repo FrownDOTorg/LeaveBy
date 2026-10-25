@@ -20,7 +20,11 @@ final class ReminderManager: ObservableObject {
     @Published private(set) var denied = false
     @Published private(set) var message: String?
     private var revision = 0
-    private let identifier = "leaveby.departure"
+    private let identifier: String
+
+    init(identifier: String) {
+        self.identifier = identifier
+    }
     private let center = UNUserNotificationCenter.current()
 
     func refresh() async {

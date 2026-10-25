@@ -8,21 +8,53 @@ struct LeaveByApp: App {
     }
 
     var body: some Scene {
-        WindowGroup { PlannerView() }
+        WindowGroup { CalendarHomeView() }
     }
 }
 
 struct PlannerView: View {
-    @StateObject private var reminders = ReminderManager()
+    @StateObject private var reminders: ReminderManager
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("eventTitle") private var title = "My next event"
-    @AppStorage("arrivalTime") private var arrivalTimestamp = Date().addingTimeInterval(3600).timeIntervalSince1970
-    @AppStorage("travelMinutes") private var travelMinutes = 20
-    @AppStorage("bufferMinutes") private var bufferMinutes = 10
-    @AppStorage("originPlace") private var originJSON = ""
-    @AppStorage("destinationPlace") private var destinationJSON = ""
-    @AppStorage("walking") private var walking = false
-    @AppStorage("useMaps") private var useMaps = true
+    @Binding var plan: EventPlan
+    @Environment(\.dismiss) private var dismiss
+
+    init(plan: Binding<EventPlan>) {
+        self._plan = plan
+        self._reminders = StateObject(wrappedValue: ReminderManager(identifier: plan.wrappedValue.reminderIdentifier))
+    }
+
+    private var title: String {
+        get { plan.title }
+        nonmutating set { plan.title = newValue }
+    }
+    private var arrivalTimestamp: Double {
+        get { plan.arrivalTimestamp }
+        nonmutating set { plan.arrivalTimestamp = newValue }
+    }
+    private var travelMinutes: Int {
+        get { plan.travelMinutes }
+        nonmutating set { plan.travelMinutes = newValue }
+    }
+    private var bufferMinutes: Int {
+        get { plan.bufferMinutes }
+        nonmutating set { plan.bufferMinutes = newValue }
+    }
+    private var originJSON: String {
+        get { plan.originJSON }
+        nonmutating set { plan.originJSON = newValue }
+    }
+    private var destinationJSON: String {
+        get { plan.destinationJSON }
+        nonmutating set { plan.destinationJSON = newValue }
+    }
+    private var walking: Bool {
+        get { plan.walking }
+        nonmutating set { plan.walking = newValue }
+    }
+    private var useMaps: Bool {
+        get { plan.useMaps }
+        nonmutating set { plan.useMaps = newValue }
+    }
     @State private var choosingOrigin = false
     @State private var choosingDestination = false
     @State private var calculating = false
@@ -59,11 +91,11 @@ struct PlannerView: View {
         NavigationStack {
             Form {
                 Section("Your next event") {
-                    TextField("Event name", text: $title)
+                    TextField("Event name", text: $plan.title)
                     DatePicker("Arrive by", selection: arrival)
                 }
                 Section("Travel") {
-                    Toggle("Use Apple Maps estimate", isOn: $useMaps)
+                    Toggle("Use Apple Maps estimate", isOn: $plan.useMaps)
                     if useMaps {
                         Button { choosingOrigin = true } label: {
                             placeLabel("From", place: origin)
@@ -71,7 +103,7 @@ struct PlannerView: View {
                         Button { choosingDestination = true } label: {
                             placeLabel("To", place: destination)
                         }
-                        Picker("Travel mode", selection: $walking) {
+                        Picker("Travel mode", selection: $plan.walking) {
                             Text("Driving").tag(false)
                             Text("Walking").tag(true)
                         }
@@ -89,9 +121,9 @@ struct PlannerView: View {
                             Text(errorMessage).foregroundStyle(.red)
                         }
                     } else {
-                        Stepper("Travel: \(travelMinutes) minutes", value: $travelMinutes, in: 0...600, step: 5)
+                        Stepper("Travel: \(travelMinutes) minutes", value: $plan.travelMinutes, in: 0...600, step: 5)
                     }
-                    Stepper("Extra time: \(bufferMinutes) minutes", value: $bufferMinutes, in: 0...120, step: 5)
+                    Stepper("Extra time: \(bufferMinutes) minutes", value: $plan.bufferMinutes, in: 0...120, step: 5)
                 }
                 Section("Leave by") {
                     if let departure {
@@ -132,12 +164,15 @@ struct PlannerView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
-                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Calendar access and widgets will follow.")
+                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Apple Calendar import and widgets will follow.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
             .disabled(reminders.busy)
-            .navigationTitle("LeaveBy")
+            .navigationTitle("Event details")
+            .toolbar { ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }.disabled(reminders.busy)
+            } }
             .task { await reminders.refresh() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await reminders.refresh() } }
