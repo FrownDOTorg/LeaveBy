@@ -2,9 +2,7 @@
 A native SwiftUI departure planner for iOS 17 and later.
 
 ## First milestone
-Enter an event, arrival time, manual travel duration, and extra time to see
-when to leave. Values persist on the device. This is a single-event starter.
-Maps estimates, calendar access, notifications, and widgets are not implemented yet.
+Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Calendar access, notifications, and widgets are not implemented yet.
 
 ## Build from Windows
 Commit and push with GitHub Desktop. The Build iOS workflow uses a standard
