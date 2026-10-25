@@ -23,16 +23,20 @@ struct ProfileView: View {
                 } footer: {
                     Text("Your name stays on this device and is shared with LeaveBy's widgets. You can change or remove it anytime here. It may appear in notification previews.")
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section("A little celebration") {
                     Toggle("Playful achievement notifications", isOn: $achievementNotifications)
                     Text("Unlock a random badge at 5, 8, 12, 20, and 30 plans in a day. Uses notification permission you've already allowed; your departure reminders stay separate.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section {
                     Button("Save my preference") { save(draft) }
                     Button(savedName.isEmpty ? "Maybe later" : "Use LeaveBy without a name") { save("") }
                 }
+                .listRowBackground(LeaveByColors.card)
             }
+            .leaveByColors()
             .navigationTitle("Make yourself at home")
             .onAppear { draft = savedName }
         }

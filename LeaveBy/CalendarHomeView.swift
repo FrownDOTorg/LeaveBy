@@ -105,6 +105,7 @@ struct CalendarHomeView: View {
                     DatePicker("Selected day", selection: $day, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                 }
+                .listRowBackground(LeaveByColors.card)
                 if let badge = Achievements.badge(count: dayEvents.count, day: day) {
                     Section { AchievementCard(badge: badge) }
                         .listRowBackground(LeaveByTheme.softBlue)
@@ -112,17 +113,17 @@ struct CalendarHomeView: View {
                 Section(day.formatted(date: .complete, time: .omitted)) {
                     if dayEvents.isEmpty {
                         Text(FriendlyCopy.emptyDay)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(LeaveByColors.muted)
                     }
                     ForEach(dayEvents) { event in
                         Button { selected = event } label: {
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(event.title.isEmpty ? "Untitled event" : event.title)
-                                    .font(.headline).foregroundStyle(.primary)
+                                    .font(.headline).foregroundStyle(LeaveByColors.text)
                                 Text("Arrive by \(event.arrival.formatted(date: .omitted, time: .shortened))")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LeaveByColors.muted)
                                 if let destination = SavedPlace.decode(event.destinationJSON) {
-                                    Text(destination.name).font(.caption).foregroundStyle(.secondary)
+                                    Text(destination.name).font(.caption).foregroundStyle(LeaveByColors.muted)
                                 }
                             }
                         }
@@ -131,13 +132,16 @@ struct CalendarHomeView: View {
                         }
                     }
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section {
                     Text("Events are saved on this device in LeaveBy. Use Import to copy events from Apple Calendar. Widgets show the next saved departure.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
+                .listRowBackground(LeaveByColors.card)
             }
             .scrollContentBackground(.hidden)
             .background(LeaveByTheme.background)
+            .leaveByColors()
             .navigationTitle("LeaveBy")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

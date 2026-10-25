@@ -5,10 +5,10 @@ controls, but keep the same hierarchy, colors, wording, and achievement catalog.
 The iOS and Android apps remain separate implementations.
 
 ## Visual language
-- Canvas: #F5F7FB; white rounded cards; subtle #E0E6F0 borders.
-- Primary: #2E59DB; supporting surfaces: #E8EFFF.
-- Text: #18253D; secondary text: #667489.
-- Positive/quiet: #E8F5EE; playful achievement cards can use #FFF5DD.
+- Canvas: #101F36 deep navy; #1A2E49 rounded cards; #3A5272 borders.
+- Primary accent: #8DB6FF soft blue; raised surfaces: #243F62. Filled accent buttons use #101F36 text.
+- Text: #F1F5FC; secondary text: #B6C5DC; inputs: #14253E.
+- Positive: #8DE0C0 text on #1C3943; achievement surfaces: #3B3547; destructive text: #FFABBA.
 - Card corners: approximately 20 points/dp; fields 12; buttons 16.
 - Content should stay comfortable on a phone and centered on wide screens.
 - Make the next departure and countdown the strongest elements.
@@ -16,7 +16,7 @@ The iOS and Android apps remain separate implementations.
 - Give editing fields clear groups: plan, arrival, travel/buffer, departure.
 - Never communicate status only through color. Preserve readable text and
   accessible native labels; allow text to wrap at larger sizes.
-- On iOS, grouped list cards and adaptive dark surfaces follow these same roles.
+- Both platforms use the navy theme regardless of the device appearance. Native controls, dialogs, forms, and iOS widgets follow the same roles.
 
 ## Voice
 Friendly, calm, practical, a little playful. Use the user's chosen first name or
@@ -67,4 +67,3 @@ On-device checks: 4->5, 7->8, and 11->12 plans; random-but-stable wording; chose
 name and no-name fallback; editing/reopening without repeats; another date;
 deletion/re-addition; import batches; denied permission; muted achievements with
 departure reminders still working. Test iOS separately once signing is ready.
-

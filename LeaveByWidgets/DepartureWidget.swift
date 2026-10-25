@@ -65,13 +65,13 @@ struct DepartureWidgetView: View {
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label(FriendlyCopy.name.isEmpty ? "LeaveBy" : "Hi, \(FriendlyCopy.name)!", systemImage: "figure.walk").font(.caption).foregroundStyle(.secondary)
+                        Label(FriendlyCopy.name.isEmpty ? "LeaveBy" : "Hi, \(FriendlyCopy.name)!", systemImage: "figure.walk").font(.caption).foregroundStyle(LeaveByColors.muted)
                         Text(trip.title).font(.headline).lineLimit(2)
                         Text(trip.departure, format: .dateTime.month().day().hour().minute())
                             .font(.subheadline)
                         countdown(trip).font(.title2.bold())
                         Text(trip.usesMaps ? "Saved Maps estimate" : "Manual travel time")
-                            .font(.caption2).foregroundStyle(.secondary)
+                            .font(.caption2).foregroundStyle(LeaveByColors.muted)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -90,7 +90,8 @@ struct DepartureWidgetView: View {
             }
         }
         .privacySensitive()
-        .containerBackground(.fill.tertiary, for: .widget)
+        .foregroundStyle(LeaveByColors.text)
+        .containerBackground(LeaveByColors.background, for: .widget)
     }
 
     @ViewBuilder private func countdown(_ trip: WidgetDeparture) -> some View {

@@ -89,7 +89,7 @@ struct CalendarImportView: View {
                 Section {
                     Text(day.formatted(date: .complete, time: .omitted))
                     Text("Copy selected events into LeaveBy. Copies won’t sync with later calendar changes. LeaveBy does not change your original events.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                     Button("Load events from Apple Calendar") {
                         selected = []
                         Task { await importer.load(day: day) }
@@ -103,6 +103,7 @@ struct CalendarImportView: View {
                 } footer: {
                     Text("iOS requires Full Access to read existing calendar events. Only timed events starting on this day are listed; add all-day plans manually with an arrival time.")
                 }
+                .listRowBackground(LeaveByColors.card)
                 ForEach(importer.items) { item in
                     let imported = existingKeys.contains(item.id)
                     Button {
@@ -111,11 +112,11 @@ struct CalendarImportView: View {
                     } label: {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(item.title).foregroundStyle(.primary)
+                                Text(item.title).foregroundStyle(LeaveByColors.text)
                                 Text("\(item.start.formatted(date: .omitted, time: .shortened)) · \(item.calendarName)")
-                                    .font(.caption).foregroundStyle(.secondary)
+                                    .font(.caption).foregroundStyle(LeaveByColors.muted)
                                 if !item.location.isEmpty {
-                                    Text(item.location).font(.caption).foregroundStyle(.secondary)
+                                    Text(item.location).font(.caption).foregroundStyle(LeaveByColors.muted)
                                 }
                                 if imported { Text("Already in your plans").font(.caption) }
                             }
@@ -126,7 +127,9 @@ struct CalendarImportView: View {
                     .disabled(imported)
                     .accessibilityAddTraits(selected.contains(item.id) ? .isSelected : [])
                 }
+                .listRowBackground(LeaveByColors.card)
             }
+            .leaveByColors()
             .navigationTitle("Import events")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

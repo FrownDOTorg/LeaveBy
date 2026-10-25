@@ -95,14 +95,15 @@ struct PlannerView: View {
                     DatePicker("Arrive by", selection: arrival)
                     if plan.importedOccurrenceKey != nil {
                         Text("Your calendar event is copied here. Make it your own; your original stays unchanged.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(LeaveByColors.muted)
                     }
                     if let location = plan.importedLocation, destination == nil {
                         Text("Calendar location: \(location)").font(.caption)
                         Text("Tap To to find and confirm this place in Apple Maps.")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.caption).foregroundStyle(LeaveByColors.muted)
                     }
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section("Travel") {
                     Toggle("Use Apple Maps estimate", isOn: $plan.useMaps)
                     if useMaps {
@@ -124,20 +125,21 @@ struct PlannerView: View {
                         if let validEstimate {
                             Text("Estimated travel: \(Int(ceil(validEstimate.seconds / 60))) minutes")
                             Text("Updated \(validEstimate.fetchedAt.formatted(date: .omitted, time: .shortened)). Estimates can change; recalculate before leaving.")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(LeaveByColors.muted)
                         }
                         if let errorMessage {
-                            Text(errorMessage).foregroundStyle(.red)
+                            Text(errorMessage).foregroundStyle(LeaveByColors.danger)
                         }
                     } else {
                         Stepper("Travel: \(travelMinutes) minutes", value: $plan.travelMinutes, in: 0...600, step: 5)
                     }
                     Stepper("Extra time: \(bufferMinutes) minutes", value: $plan.bufferMinutes, in: 0...120, step: 5)
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section("Leave by") {
                     if let departure {
                         Text(departure, format: .dateTime.month().day().hour().minute())
-                            .font(.largeTitle.bold()).foregroundStyle(.blue)
+                            .font(.largeTitle.bold()).foregroundStyle(LeaveByColors.accent)
                         TimelineView(.periodic(from: .now, by: 1)) { context in
                             if departure > context.date {
                                 Text(departure, style: .relative) + Text(" until departure")
@@ -147,7 +149,7 @@ struct PlannerView: View {
                         }
                     } else {
                         Text("Where are we headed? Choose your places, then calculate your travel time. Refresh it whenever your plans change.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(LeaveByColors.muted)
                     }
                 }
                 .listRowBackground(LeaveByTheme.softBlue)
@@ -168,19 +170,22 @@ struct PlannerView: View {
                         Button("Open notification settings") { reminders.openSettings() }
                     }
                     if let message = reminders.message {
-                        Text(message).font(.footnote).foregroundStyle(.secondary)
+                        Text(message).font(.footnote).foregroundStyle(LeaveByColors.muted)
                     }
                     Text("Uses your saved departure time, without background traffic updates. Focus and notification settings can silence or delay alerts.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
+                .listRowBackground(LeaveByColors.card)
                 Section {
                     Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Widgets show the next saved departure. Use Import in the calendar to copy existing events.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
+                .listRowBackground(LeaveByColors.card)
             }
             .scrollContentBackground(.hidden)
             .background(LeaveByTheme.background)
             .disabled(reminders.busy)
+            .leaveByColors()
             .navigationTitle("Event details")
             .toolbar { ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }.disabled(reminders.busy)
@@ -204,7 +209,7 @@ struct PlannerView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(label): \(place?.name ?? "Choose a place")")
             if let place {
-                Text(place.address).font(.caption).foregroundStyle(.secondary)
+                Text(place.address).font(.caption).foregroundStyle(LeaveByColors.muted)
             }
         }
     }

@@ -2,15 +2,18 @@ import SwiftUI
 import UIKit
 
 enum LeaveByTheme {
-    static let accent = Color(red: 46/255, green: 89/255, blue: 219/255)
-    static let background = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor.systemGroupedBackground :
-            UIColor(red: 245/255, green: 247/255, blue: 251/255, alpha: 1)
-    })
-    static let softBlue = Color(uiColor: UIColor { traits in
-        traits.userInterfaceStyle == .dark ? UIColor(red: 0.10, green: 0.16, blue: 0.28, alpha: 1) :
-            UIColor(red: 232/255, green: 239/255, blue: 255/255, alpha: 1)
-    })
+    static let accent = LeaveByColors.accent
+    static let background = LeaveByColors.background
+    static let softBlue = LeaveByColors.elevated
+}
+extension View {
+    func leaveByColors() -> some View {
+        self.scrollContentBackground(.hidden)
+            .background(LeaveByColors.background)
+            .foregroundStyle(LeaveByColors.text)
+            .tint(LeaveByColors.accent)
+            .preferredColorScheme(.dark)
+    }
 }
 
 struct AchievementCard: View {
@@ -20,7 +23,7 @@ struct AchievementCard: View {
             Label("DAILY ACHIEVEMENT", systemImage: "sparkles")
                 .font(.caption.bold()).foregroundStyle(LeaveByTheme.accent)
             Text(badge.title).font(.title3.bold())
-            Text(badge.body).font(.subheadline).foregroundStyle(.secondary)
+            Text(badge.body).font(.subheadline).foregroundStyle(LeaveByColors.muted)
         }
         .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
@@ -37,7 +40,7 @@ struct NextDepartureCard: View {
             Text(timerInterval: min(Date.now, departure)...departure, countsDown: true)
                 .font(.largeTitle.bold()).monospacedDigit().foregroundStyle(LeaveByTheme.accent)
             Text("Leave \(departure.formatted(date: .abbreviated, time: .shortened))")
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.subheadline).foregroundStyle(LeaveByColors.muted)
         }
         .padding(.vertical, 8)
     }

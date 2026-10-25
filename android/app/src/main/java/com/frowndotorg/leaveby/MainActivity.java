@@ -32,10 +32,13 @@ public class MainActivity extends Activity {
     @Override protected void onResume() { super.onResume(); handler.post(tick); }
     @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
 
-    private static final int INK = Color.rgb(24, 37, 61);
-    private static final int MUTED = Color.rgb(102, 116, 137);
-    private static final int BLUE = Color.rgb(46, 89, 219);
-    private static final int LINE = Color.rgb(224, 230, 240);
+    private static final int INK = Color.rgb(241, 245, 252);
+    private static final int MUTED = Color.rgb(182, 197, 220);
+    private static final int BLUE = Color.rgb(141, 182, 255);
+    private static final int LINE = Color.rgb(58, 82, 114);
+    private static final int BACKGROUND = Color.rgb(16,31,54);
+    private static final int SURFACE = Color.rgb(26,46,73);
+    private static final int ELEVATED = Color.rgb(36,63,98);
     private LinearLayout rootPage;
     private TextView homeCountdown;
     private long homeDeparture;
@@ -54,7 +57,7 @@ public class MainActivity extends Activity {
     }
     private void page(String heading) {
         LinearLayout outer = new LinearLayout(this);
-        outer.setOrientation(LinearLayout.VERTICAL); outer.setBackgroundColor(Color.rgb(245,247,251));
+        outer.setOrientation(LinearLayout.VERTICAL); outer.setBackgroundColor(BACKGROUND);
         outer.setOnApplyWindowInsetsListener((v, insets) -> {
             v.setPadding(0, insets.getSystemWindowInsetTop(), 0, insets.getSystemWindowInsetBottom());
             return insets;
@@ -88,7 +91,7 @@ public class MainActivity extends Activity {
     }
     private void beginCard(int color) {
         LinearLayout card=new LinearLayout(this); card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(18),dp(16),dp(18),dp(16)); card.setBackground(rounded(color,20,color==Color.WHITE?LINE:0));
+        card.setPadding(dp(18),dp(16),dp(18),dp(16)); card.setBackground(rounded(color,20,LINE));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(8));
         rootPage.addView(card,lp); page=card;
     }
@@ -97,19 +100,19 @@ public class MainActivity extends Activity {
         Button b=new Button(this); b.setText(value); b.setAllCaps(false); b.setTextColor(BLUE);
         b.setTextSize(15); b.setTypeface(null,android.graphics.Typeface.BOLD);
         b.setPadding(dp(14),dp(12),dp(14),dp(12)); b.setMinHeight(dp(50));
-        b.setBackground(ripple(Color.WHITE,LINE));
+        b.setBackground(ripple(SURFACE,LINE));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(5),0,dp(5));
         page.addView(b,lp); b.setOnClickListener(v->action.run()); return b;
     }
     private Button primary(String value,Runnable action) {
-        Button b=button(value,action); b.setBackground(ripple(BLUE,0)); b.setTextColor(Color.WHITE); return b;
+        Button b=button(value,action); b.setBackground(ripple(BLUE,0)); b.setTextColor(BACKGROUND); return b;
     }
     private EditText input(String title,String value,boolean number) {
         TextView titleView=text(title,13,true); titleView.setPadding(0,dp(12),0,dp(6));
         EditText e=new EditText(this); e.setSingleLine(true); e.setText(value); e.setTextSize(16); e.setTextColor(INK);
         e.setInputType(number?android.text.InputType.TYPE_CLASS_NUMBER:
             android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        e.setPadding(dp(14),dp(12),dp(14),dp(12)); e.setBackground(rounded(Color.rgb(247,249,253),12,LINE));
+        e.setPadding(dp(14),dp(12),dp(14),dp(12)); e.setBackground(rounded(Color.rgb(20,37,62),12,LINE));
         page.addView(e,new LinearLayout.LayoutParams(-1,dp(50))); return e;
     }
     private String when(long instant) { return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(new Date(instant)); }
@@ -129,7 +132,7 @@ public class MainActivity extends Activity {
         for(Plan p:PlanStore.all(this)) if(p.departure()>System.currentTimeMillis() && (next==null || p.departure()<next.departure())) next=p;
         if(next!=null) {
             final Plan upcoming=next;
-            beginCard(Color.rgb(232,239,255));
+            beginCard(ELEVATED);
             text("YOUR NEXT DEPARTURE",11,true).setTextColor(BLUE);
             text(next.title,23,true);
             homeDeparture=next.departure();
@@ -138,7 +141,7 @@ public class MainActivity extends Activity {
             primary("View your plan",()->edit(upcoming));
             endCard();
         } else {
-            beginCard(Color.rgb(232,245,238));
+            beginCard(Color.rgb(28,57,67));
             text("Room for something good",22,true);
             caption("Pick a day below and plan your next outing.");
             endCard();
@@ -158,7 +161,7 @@ public class MainActivity extends Activity {
             boolean active=date.get(Calendar.DAY_OF_YEAR)==day.get(Calendar.DAY_OF_YEAR) && date.get(Calendar.YEAR)==day.get(Calendar.YEAR);
             TextView chip=label(new java.text.SimpleDateFormat("EE",Locale.getDefault()).format(date.getTime())+"\n"+date.get(Calendar.DAY_OF_MONTH),12,active);
             chip.setGravity(Gravity.CENTER); chip.setLineSpacing(dp(5),1);
-            chip.setTextColor(active?Color.WHITE:MUTED); chip.setBackground(ripple(active?BLUE:Color.WHITE,active?0:LINE));
+            chip.setTextColor(active?BACKGROUND:MUTED); chip.setBackground(ripple(active?BLUE:SURFACE,active?0:LINE));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(64),1); lp.setMargins(dp(2),dp(6),dp(2),dp(6));
             week.addView(chip,lp); chip.setContentDescription(DateFormat.getDateInstance(DateFormat.FULL).format(date.getTime()));
             chip.setOnClickListener(v->{day=(Calendar)date.clone();showEarlier=false;home();});
@@ -168,7 +171,7 @@ public class MainActivity extends Activity {
         for(Plan plan:PlanStore.all(this))if(sameDay(plan.arrival))plansOnDay++;
         Achievements.Badge badge=Achievements.badge(this,plansOnDay,day.getTimeInMillis());
         if(badge!=null) {
-            beginCard(Color.rgb(255,245,221));
+            beginCard(Color.rgb(59,53,71));
             text("DAILY ACHIEVEMENT",11,true).setTextColor(BLUE);
             text(badge.title,22,true);caption(badge.body);endCard();
         }
@@ -188,7 +191,7 @@ public class MainActivity extends Activity {
         }
         if(earlier>0)button((showEarlier?"Hide":"Show")+" earlier plans ("+earlier+")",()->{showEarlier=!showEarlier;home();});
         if(count==0) {
-            beginCard(Color.WHITE); text("A little breathing room",18,true);
+            beginCard(SURFACE); text("A little breathing room",18,true);
             caption("Nothing planned for this day. Add something to look forward to.");endCard();
         }
         sectionTitle("MAKE IT YOURS");
@@ -206,7 +209,7 @@ public class MainActivity extends Activity {
     }
 
     private void eventCard(Plan p) {
-        beginCard(Color.WHITE);
+        beginCard(SURFACE);
         LinearLayout card=page;
         TextView meta=text("ARRIVE "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(p.arrival)),11,true);
         meta.setTextColor(BLUE);meta.setLetterSpacing(0.06f);
@@ -215,8 +218,8 @@ public class MainActivity extends Activity {
         caption("Leave "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(p.departure()))+
             "  ·  "+p.travel+" min travel  ·  "+p.buffer+" min extra");
         TextView state=text(p.reminder && p.departure()>System.currentTimeMillis()?"Reminder set":"Tap to view your plan",12,false);
-        state.setTextColor(p.reminder?Color.rgb(37,125,88):MUTED);
-        card.setBackground(ripple(Color.WHITE,LINE));card.setOnClickListener(v->edit(p));
+        state.setTextColor(p.reminder?Color.rgb(141,224,192):MUTED);
+        card.setBackground(ripple(SURFACE,LINE));card.setOnClickListener(v->edit(p));
         card.setContentDescription(p.title+", arrive "+when(p.arrival)+". Open plan");
         endCard();
     }
@@ -237,13 +240,13 @@ public class MainActivity extends Activity {
         page("Your next plan");
         button("Back to calendar", this::confirmBack);
         sectionTitle("THE PLAN");
-        beginCard(Color.WHITE);
+        beginCard(SURFACE);
         title = input("Event name", plan.title, false);
         origin = input("Starting point (optional)",plan.origin,false);
         destination = input("Destination (optional)",plan.destination,false);
         endCard();
         sectionTitle("WHEN TO BE THERE");
-        beginCard(Color.WHITE);
+        beginCard(SURFACE);
         arrivalLabel = text("Arrive by " + when(plan.arrival),18,true);
         button("Choose arrival date", () -> {
             Calendar c = Calendar.getInstance(); c.setTimeInMillis(draft.arrival);
@@ -260,13 +263,13 @@ public class MainActivity extends Activity {
         });
         endCard();
         sectionTitle("GIVE YOURSELF ENOUGH TIME");
-        beginCard(Color.WHITE);
+        beginCard(SURFACE);
         travel = input("Travel time · minutes",String.valueOf(plan.travel),true);
         buffer = input("A little extra time · minutes",String.valueOf(plan.buffer),true);
         caption("Up to 600 minutes of travel and 120 minutes of extra time.");
         endCard();
         sectionTitle("YOUR DEPARTURE");
-        beginCard(Color.rgb(232,239,255));
+        beginCard(ELEVATED);
         departure = text("",19,true); countdown = text("",32,true);
         countdown.setTextColor(BLUE);
         endCard();
@@ -285,7 +288,7 @@ public class MainActivity extends Activity {
         if (PlanStore.find(this,plan.id)!=null) button("Delete plan", () ->
             new AlertDialog.Builder(this).setTitle("Delete this plan?").setMessage("This also clears its departure reminder.")
             .setPositiveButton("Delete",(d,w)->{ReminderReceiver.cancel(this,plan.id);PlanStore.delete(this,plan.id);home();})
-            .setNegativeButton("Keep it",null).show()).setTextColor(Color.rgb(181,52,69));
+            .setNegativeButton("Keep it",null).show()).setTextColor(Color.rgb(255,171,186));
         updateCountdown();
     }
 

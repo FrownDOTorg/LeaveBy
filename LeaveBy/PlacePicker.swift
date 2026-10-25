@@ -28,8 +28,9 @@ struct PlacePicker: View {
                 } footer: {
                     Text("Include a city or full address, then choose the correct result. Searches are sent to Apple Maps.")
                 }
+                .listRowBackground(LeaveByColors.card)
                 if searching { ProgressView("Searching…") }
-                if let message { Text(message).foregroundStyle(.secondary) }
+                if let message { Text(message).foregroundStyle(LeaveByColors.muted) }
                 ForEach(results.indices, id: \.self) { index in
                     let item = results[index]
                     Button {
@@ -37,13 +38,15 @@ struct PlacePicker: View {
                         dismiss()
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(item.name ?? "Place").foregroundStyle(.primary)
+                            Text(item.name ?? "Place").foregroundStyle(LeaveByColors.text)
                             Text(item.placemark.title ?? "")
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(LeaveByColors.muted)
                         }
                     }
                 }
+                .listRowBackground(LeaveByColors.card)
             }
+            .leaveByColors()
             .navigationTitle(title)
             .toolbar { ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
