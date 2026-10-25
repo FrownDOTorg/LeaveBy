@@ -1,0 +1,64 @@
+{
+  "tiers": [
+    {
+      "count": 5,
+      "titles": [
+        "Calendar adventurer",
+        "Five-plan energy",
+        "Busy-day badge"
+      ],
+      "messages": [
+        "{namePrefix}{count} plans {day}. Your calendar has entered adventure mode.",
+        "{namePrefix}{count} plans {day}? Look at you making moves."
+      ]
+    },
+    {
+      "count": 8,
+      "titles": [
+        "Wait, there's more?",
+        "Calendar double take",
+        "Plot twist: another plan"
+      ],
+      "messages": [
+        "{namePrefix}{count} plans {day}? We just did a double take.",
+        "{namePrefix}{count} plans {day}. Your calendar would like a snack break."
+      ]
+    },
+    {
+      "count": 12,
+      "titles": [
+        "Your calendar blinked twice",
+        "Side-quest specialist",
+        "An itinerary with chapters"
+      ],
+      "messages": [
+        "{namePrefix}{count} plans {day}?! Is this a day or a whole season?",
+        "{namePrefix}{count} plans {day}. We may need a table of contents."
+      ]
+    },
+    {
+      "count": 20,
+      "titles": [
+        "Calendar.exe is astonished",
+        "Are you teleporting?",
+        "A very ambitious itinerary"
+      ],
+      "messages": [
+        "{namePrefix}{count} plans {day}?! Be honest: have you unlocked teleportation?",
+        "{namePrefix}{count} plans {day}. Your calendar has quietly put on a helmet."
+      ]
+    },
+    {
+      "count": 30,
+      "titles": [
+        "We have run out of eyebrows",
+        "The calendar needs a moment",
+        "Main-character itinerary"
+      ],
+      "messages": [
+        "{namePrefix}{count} plans {day}?! Our eyebrows have left the building.",
+        "{namePrefix}{count} plans {day}. Even your calendar needs to sit down."
+      ]
+    }
+  ]
+}

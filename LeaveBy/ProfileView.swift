@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @AppStorage(FriendlyCopy.nameKey) private var savedName = ""
+    @AppStorage(Achievements.enabledKey) private var achievementNotifications = true
     @AppStorage("didChooseName") private var didChooseName = false
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
@@ -22,6 +23,11 @@ struct ProfileView: View {
                 } footer: {
                     Text("Your name stays on this device and is shared with LeaveBy's widgets. You can change or remove it anytime here. It may appear in notification previews.")
                 }
+                Section("A little celebration") {
+                    Toggle("Playful achievement notifications", isOn: $achievementNotifications)
+                    Text("Unlock a random badge at 5, 8, 12, 20, and 30 plans in a day. Uses notification permission you've already allowed; your departure reminders stay separate.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 Section {
                     Button("Save my preference") { save(draft) }
                     Button(savedName.isEmpty ? "Maybe later" : "Use LeaveBy without a name") { save("") }
@@ -37,4 +43,3 @@ struct ProfileView: View {
         dismiss()
     }
 }
-

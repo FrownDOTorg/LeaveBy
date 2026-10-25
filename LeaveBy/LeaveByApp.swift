@@ -8,7 +8,7 @@ struct LeaveByApp: App {
     }
 
     var body: some Scene {
-        WindowGroup { CalendarHomeView() }
+        WindowGroup { CalendarHomeView().tint(LeaveByTheme.accent) }
     }
 }
 
@@ -150,6 +150,7 @@ struct PlannerView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .listRowBackground(LeaveByTheme.softBlue)
                 Section("Departure reminder") {
                     if let scheduled = reminders.scheduledDate {
                         Text("Scheduled for \(scheduled.formatted(date: .abbreviated, time: .shortened))")
@@ -177,6 +178,8 @@ struct PlannerView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(LeaveByTheme.background)
             .disabled(reminders.busy)
             .navigationTitle("Event details")
             .toolbar { ToolbarItem(placement: .confirmationAction) {

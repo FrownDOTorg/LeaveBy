@@ -123,3 +123,11 @@ installed in LDPlayer without waiting for Apple enrollment. This Android preview
 has manual travel time, saved calendar plans, personalized names, countdowns, and
 notifications. Maps estimates, calendar import, and widgets are iOS-only for now.
 The Android app cannot validate iOS-specific behavior.
+
+## Shared design and daily achievements
+See design/README.md for the cross-platform design template. Both apps use the
+same design/achievements.json catalog for random daily achievement messages at
+5, 8, 12, 20, and 30 saved plans per arrival day. Milestones grow more astonished,
+use the preferred name, and notify only once per milestone per day when existing
+notification access permits. Each app has a separate achievement-notification
+toggle. These count plans, not completed journeys.

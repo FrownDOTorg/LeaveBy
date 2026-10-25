@@ -28,7 +28,7 @@ public final class PlanStore {
     public static void put(Context c, Plan p) {
         List<Plan> plans = all(c);
         plans.removeIf(old -> old.id.equals(p.id));
-        plans.add(p); write(c, plans);
+        plans.add(p); write(c, plans); Achievements.evaluate(c, plans);
     }
     public static void delete(Context c, String id) {
         List<Plan> plans = all(c); plans.removeIf(p -> p.id.equals(id)); write(c, plans);
@@ -40,4 +40,3 @@ public final class PlanStore {
         prefs(c).edit().putString("plans", a.toString()).apply();
     }
 }
-

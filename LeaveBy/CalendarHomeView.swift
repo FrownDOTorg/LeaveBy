@@ -59,6 +59,7 @@ enum EventStorage {
         guard let data = try? JSONEncoder().encode(events) else { return }
         UserDefaults.standard.set(data, forKey: key)
         publishWidgets(events)
+        Achievements.evaluate(events)
     }
 
     static func publishWidgets(_ events: [EventPlan]) {
@@ -90,10 +91,23 @@ struct CalendarHomeView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section { Text(FriendlyCopy.greeting).font(.headline) }
+                Section {
+                    Text(FriendlyCopy.greeting).font(.headline)
+                    TimelineView(.periodic(from: .now, by: 30)) { context in
+                        if let next = events.filter({ ($0.widgetDeparture ?? .distantPast) > context.date })
+                            .sorted(by: { ($0.widgetDeparture ?? .distantFuture) < ($1.widgetDeparture ?? .distantFuture) }).first,
+                           let departure = next.widgetDeparture {
+                            NextDepartureCard(title: next.title, departure: departure)
+                        }
+                    }
+                }.listRowBackground(LeaveByTheme.softBlue)
                 Section {
                     DatePicker("Selected day", selection: $day, displayedComponents: .date)
                         .datePickerStyle(.graphical)
+                }
+                if let badge = Achievements.badge(count: dayEvents.count, day: day) {
+                    Section { AchievementCard(badge: badge) }
+                        .listRowBackground(LeaveByTheme.softBlue)
                 }
                 Section(day.formatted(date: .complete, time: .omitted)) {
                     if dayEvents.isEmpty {
@@ -122,6 +136,8 @@ struct CalendarHomeView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(LeaveByTheme.background)
             .navigationTitle("LeaveBy")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
