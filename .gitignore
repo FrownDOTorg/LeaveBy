@@ -1,0 +1,10 @@
+.DS_Store
+build/
+*.xcodeproj/
+*.xcworkspace/
+*.zip
+*.ipa
+*.p12
+*.mobileprovision
+*.cer
+*.key

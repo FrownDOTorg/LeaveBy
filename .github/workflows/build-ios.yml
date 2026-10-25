@@ -1,0 +1,33 @@
+name: Build iOS
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install project generator
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build for iPhone Simulator
+        run: >-
+          xcodebuild -project LeaveBy.xcodeproj -scheme LeaveBy
+          -configuration Debug -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Package simulator app
+        run: ditto -c -k --keepParent build/Build/Products/Debug-iphonesimulator/LeaveBy.app LeaveBy-simulator.zip
+      - name: Save simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: LeaveBy-simulator
+          path: LeaveBy-simulator.zip
+          retention-days: 7
