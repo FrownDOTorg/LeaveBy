@@ -33,7 +33,7 @@
     </style>
     <style name="Theme.LeaveBy.Light" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#315EC4</item>
+        <item name="android:colorAccent">#2456D3</item>
         <item name="android:colorBackground">#F3F6FC</item>
         <item name="android:windowBackground">#F3F6FC</item>
         <item name="android:colorBackgroundFloating">#FFFFFF</item>
@@ -47,7 +47,7 @@
     </style>
     <style name="Theme.LeaveBy.Dark" parent="Theme.LeaveBy">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#85AFF8</item>
+        <item name="android:colorAccent">#55B8FF</item>
         <item name="android:colorBackground">#191E27</item>
         <item name="android:windowBackground">#191E27</item>
         <item name="android:colorBackgroundFloating">#242C38</item>

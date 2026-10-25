@@ -37,14 +37,14 @@
     "card": "#FFFFFF",
     "field": "#F4F6FA",
     "elevated": "#E7EEFF",
-    "accent": "#315EC4",
+    "accent": "#2456D3",
     "onAccent": "#FFFFFF",
     "text": "#19263C",
     "muted": "#52627A",
     "border": "#A9B8CD",
     "positive": "#E7EEFF",
     "achievement": "#E7EEFF",
-    "success": "#315EC4",
+    "success": "#2456D3",
     "danger": "#B1324E"
   },
   "Dark": {
@@ -53,14 +53,14 @@
     "card": "#242C38",
     "field": "#1D2531",
     "elevated": "#293B55",
-    "accent": "#85AFF8",
+    "accent": "#55B8FF",
     "onAccent": "#101F36",
     "text": "#F1F5FC",
     "muted": "#BCC9DC",
     "border": "#4A5C74",
     "positive": "#293B55",
     "achievement": "#293B55",
-    "success": "#9BBEFF",
+    "success": "#55B8FF",
     "danger": "#FFABBA"
   }
 }
