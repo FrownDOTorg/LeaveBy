@@ -38,14 +38,14 @@ final class CalendarImporter: ObservableObject {
         do {
             let status = EKEventStore.authorizationStatus(for: .event)
             if status == .restricted {
-                message = "Calendar access is restricted on this iPhone. You can still add events manually."
+                message = "This iPhone doesn't allow calendar access right now. You can still create a plan yourself."
                 return
             }
             if status != .fullAccess {
                 let allowed = try await store.requestFullAccessToEvents()
                 guard allowed else {
                     denied = true
-                    message = "Enable Full Access for LeaveBy in Settings to import existing events."
+                    message = "Let's allow Full Access for LeaveBy in Settings so you can bring your events over."
                     return
                 }
             }
@@ -62,9 +62,9 @@ final class CalendarImporter: ObservableObject {
                         start: event.startDate, location: event.location ?? "",
                         calendarName: event.calendar.title)
                 }
-            if items.isEmpty { message = "No timed events start on this day. Try another day in LeaveBy’s calendar." }
+            if items.isEmpty { message = "Nothing with a start time to bring over today. Try another day, or add a plan of your own." }
         } catch {
-            message = "Couldn’t read your calendars. Check calendar access in Settings, then try again."
+            message = "We couldn't open your calendars just yet. Check access in Settings, then try again."
             denied = EKEventStore.authorizationStatus(for: .event) == .denied
         }
     }
@@ -117,7 +117,7 @@ struct CalendarImportView: View {
                                 if !item.location.isEmpty {
                                     Text(item.location).font(.caption).foregroundStyle(.secondary)
                                 }
-                                if imported { Text("Already imported").font(.caption) }
+                                if imported { Text("Already in your plans").font(.caption) }
                             }
                             Spacer()
                             Image(systemName: imported || selected.contains(item.id) ? "checkmark.circle.fill" : "circle")

@@ -19,6 +19,7 @@ final class ReminderManager: ObservableObject {
     @Published private(set) var busy = false
     @Published private(set) var denied = false
     @Published private(set) var message: String?
+    private static var mutationVersion = 0
     private var revision = 0
     private let identifier: String
 
@@ -39,6 +40,7 @@ final class ReminderManager: ObservableObject {
 
     func schedule(at date: Date, title: String) async {
         guard !busy else { return }
+        Self.mutationVersion += 1
         revision += 1
         busy = true
         message = nil
@@ -47,17 +49,17 @@ final class ReminderManager: ObservableObject {
             let granted = try await center.requestAuthorization(options: [.alert, .sound])
             denied = !granted
             guard granted else {
-                message = "Notifications are off. Enable them in Settings to set a reminder."
+                message = "Let's turn on notifications in Settings so we can give you a heads-up."
                 return
             }
             guard date.timeIntervalSinceNow >= 5 else {
-                message = "Choose a departure at least five seconds in the future."
+                message = "That departure is a little too soon. Pick a time at least five seconds from now, and we'll remind you."
                 return
             }
             let content = UNMutableNotificationContent()
-            content.title = "Time to leave"
-            let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            content.body = name.isEmpty ? "It’s your planned departure time." : "It’s time to leave for \(name)."
+            content.title = FriendlyCopy.reminderTitle
+            content.body = FriendlyCopy.reminderBody(eventTitle: title)
+            content.userInfo = ["eventTitle": title]
             content.sound = .default
             // A fixed UTC calendar keeps the reminder at the planned instant across time-zone changes.
             var calendar = Calendar(identifier: .gregorian)
@@ -69,19 +71,35 @@ final class ReminderManager: ObservableObject {
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             try await center.add(request)
             scheduledDate = trigger.nextTriggerDate()
-            message = "Reminder set. Changing the plan cancels it; set it again after your changes."
+            message = FriendlyCopy.reminderSet + " If your plans change, set a fresh reminder afterward."
         } catch {
-            message = "Couldn’t set the reminder. Please try again."
+            message = "Your reminder didn't save this time. Give it another try."
         }
     }
 
     func cancel(explain: Bool = true) {
+        Self.mutationVersion += 1
         revision += 1
         let hadReminder = scheduledDate != nil
         center.removePendingNotificationRequests(withIdentifiers: [identifier])
         center.removeDeliveredNotifications(withIdentifiers: [identifier])
         scheduledDate = nil
-        if hadReminder && explain { message = "Reminder canceled. Set it again for your updated plan." }
+        if hadReminder && explain { message = "Your old reminder is cleared. When your updated plan is ready, set a fresh one." }
+    }
+
+    static func refreshNames() async {
+        let center = UNUserNotificationCenter.current()
+        let version = mutationVersion
+        for request in await center.pendingNotificationRequests() where request.identifier.hasPrefix("leaveby.departure") {
+            guard version == mutationVersion else { return }
+            guard let trigger = request.trigger,
+                  let content = request.content.mutableCopy() as? UNMutableNotificationContent else { continue }
+            content.title = FriendlyCopy.reminderTitle
+            if let title = content.userInfo["eventTitle"] as? String {
+                content.body = FriendlyCopy.reminderBody(eventTitle: title)
+            }
+            try? await center.add(UNNotificationRequest(identifier: request.identifier, content: content, trigger: trigger))
+        }
     }
 
     func openSettings() {

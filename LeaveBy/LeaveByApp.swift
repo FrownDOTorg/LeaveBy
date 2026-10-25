@@ -94,7 +94,7 @@ struct PlannerView: View {
                     TextField("Event name", text: $plan.title)
                     DatePicker("Arrive by", selection: arrival)
                     if plan.importedOccurrenceKey != nil {
-                        Text("Copied from Apple Calendar. Changes here do not update the original.")
+                        Text("Your calendar event is copied here. Make it your own; your original stays unchanged.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     if let location = plan.importedLocation, destination == nil {
@@ -142,11 +142,11 @@ struct PlannerView: View {
                             if departure > context.date {
                                 Text(departure, style: .relative) + Text(" until departure")
                             } else {
-                                Text("Your planned departure time has passed.")
+                                Text(FriendlyCopy.departurePassed)
                             }
                         }
                     } else {
-                        Text("Choose your places and calculate travel time. Recalculate after changing your trip or extra time.")
+                        Text("Where are we headed? Choose your places, then calculate your travel time. Refresh it whenever your plans change.")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -216,7 +216,7 @@ struct PlannerView: View {
         let targetArrival = Date(timeIntervalSince1970: arrivalTimestamp)
             .addingTimeInterval(-Double(bufferMinutes * 60))
         guard targetArrival > .now else {
-            errorMessage = "Choose a future arrival time that also allows for your extra time."
+            errorMessage = "Let's pick a later arrival so there's room for your extra time, too."
             return
         }
         calculating = true
@@ -226,7 +226,7 @@ struct PlannerView: View {
                 arriveBy: targetArrival, walking: walking)
             guard tripSignature == signature else { return }
             guard seconds.isFinite, seconds >= 0 else {
-                errorMessage = "Apple Maps returned an invalid estimate. Please try again."
+                errorMessage = "That travel estimate doesn't look right. Let's try again."
                 return
             }
             estimate = TravelEstimate(signature: tripSignature, seconds: seconds, fetchedAt: .now)
@@ -234,7 +234,7 @@ struct PlannerView: View {
             plan.mapsEstimateSignature = tripSignature
         } catch {
             guard tripSignature == signature else { return }
-            errorMessage = "Couldn’t calculate this trip. Check your connection, try more precise places, or switch to manual travel time."
+            errorMessage = "We couldn't find a travel time just yet. Check your connection or try a full address. You can also enter travel time yourself."
         }
     }
 }

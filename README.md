@@ -100,3 +100,18 @@ and original alarms are not imported. No departure reminders are set automatical
 Device validation: permission allow/deny and recovery, empty day, two selected
 imports, repeat import prevention, recurring occurrences on separate dates,
 location search, deletion and reimport, and verifying original events stay intact.
+
+## Friendly messages and preferred names
+On first launch, LeaveBy asks for a first name or nickname. Naming is optional;
+Maybe later keeps friendly generic wording. The profile button lets the user
+change or remove the name anytime. Names are trimmed, repeated whitespace is
+collapsed, and input is limited to 40 characters, including Unicode names.
+
+Shared FriendlyCopy wording personalizes greetings, reminder titles and success
+messages, and Home widget greetings/empty states. Short action labels and compact
+Lock Screen widgets stay concise. Errors use friendly recovery instructions.
+Names are stored locally and shared with the widget through the App Group; they
+may be visible in notification previews. Editing the name refreshes pending
+reminder wording without changing their triggers. New reminders use the saved
+name. Device checks: skip, blank/whitespace, nicknames with apostrophes, Unicode,
+long names, rename/remove, relaunch, and notification/widget wording.

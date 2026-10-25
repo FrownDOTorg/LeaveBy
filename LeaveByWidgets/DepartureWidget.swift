@@ -65,7 +65,7 @@ struct DepartureWidgetView: View {
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label("LeaveBy", systemImage: "figure.walk").font(.caption).foregroundStyle(.secondary)
+                        Label(FriendlyCopy.name.isEmpty ? "LeaveBy" : "Hi, \(FriendlyCopy.name)!", systemImage: "figure.walk").font(.caption).foregroundStyle(.secondary)
                         Text(trip.title).font(.headline).lineLimit(2)
                         Text(trip.departure, format: .dateTime.month().day().hour().minute())
                             .font(.subheadline)
@@ -81,9 +81,9 @@ struct DepartureWidgetView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         Image(systemName: "calendar")
-                        Text("No planned departure").font(.headline)
+                        Text(FriendlyCopy.widgetEmpty).font(.headline)
                         if family == .systemSmall || family == .systemMedium {
-                            Text("Open LeaveBy and calculate a trip.").font(.caption)
+                            Text("Open LeaveBy to plan your next trip.").font(.caption)
                         }
                     }
                 }

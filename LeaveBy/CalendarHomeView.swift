@@ -73,6 +73,9 @@ enum EventStorage {
 }
 
 struct CalendarHomeView: View {
+    @AppStorage(FriendlyCopy.nameKey) private var preferredName = ""
+    @AppStorage("didChooseName") private var didChooseName = false
+    @State private var showingProfile = false
     @State private var events = EventStorage.load()
     @State private var day = Date()
     @State private var selected: EventPlan?
@@ -87,13 +90,14 @@ struct CalendarHomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section { Text(FriendlyCopy.greeting).font(.headline) }
                 Section {
                     DatePicker("Selected day", selection: $day, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                 }
                 Section(day.formatted(date: .complete, time: .omitted)) {
                     if dayEvents.isEmpty {
-                        Text("No events on this day. Tap + to add one.")
+                        Text(FriendlyCopy.emptyDay)
                             .foregroundStyle(.secondary)
                     }
                     ForEach(dayEvents) { event in
@@ -121,6 +125,10 @@ struct CalendarHomeView: View {
             .navigationTitle("LeaveBy")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    Button { showingProfile = true } label: { Image(systemName: "person.crop.circle") }
+                        .accessibilityLabel("Your name and preferences")
+                }
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Today") { day = .now }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -131,6 +139,7 @@ struct CalendarHomeView: View {
                         .accessibilityLabel("Add event on selected day")
                 }
             }
+            .sheet(isPresented: $showingProfile) { ProfileView().interactiveDismissDisabled() }
             .sheet(item: $selected) { event in
                 PlannerView(plan: binding(for: event)).id(event.id)
                     .interactiveDismissDisabled()
@@ -149,11 +158,22 @@ struct CalendarHomeView: View {
                 Button("Delete", role: .destructive) { deleteEvent() }
                 Button("Cancel", role: .cancel) { deleting = nil }
             } message: {
-                Text("This also cancels the event’s departure reminder.")
+                Text("This removes the plan and its departure reminder from LeaveBy. Your original calendar event stays safe.")
             }
-            .task { EventStorage.publishWidgets(events) }
+            .task {
+                syncProfile()
+                EventStorage.publishWidgets(events)
+                if !didChooseName { showingProfile = true }
+            }
+            .onChange(of: preferredName) { _, _ in syncProfile(refreshReminders: true) }
             .onChange(of: events) { _, value in EventStorage.save(value) }
         }
+    }
+
+    private func syncProfile(refreshReminders: Bool = false) {
+        UserDefaults(suiteName: WidgetStore.group)?.set(FriendlyCopy.cleanName(preferredName), forKey: FriendlyCopy.nameKey)
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetStore.kind)
+        if refreshReminders { Task { await ReminderManager.refreshNames() } }
     }
 
     private func binding(for event: EventPlan) -> Binding<EventPlan> {

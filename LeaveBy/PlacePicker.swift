@@ -63,9 +63,9 @@ struct PlacePicker: View {
         do {
             let response = try await MKLocalSearch(request: request).start()
             results = response.mapItems
-            if results.isEmpty { message = "No places found. Try a full address and city." }
+            if results.isEmpty { message = "No matches just yet. Try adding the street address and city." }
         } catch {
-            message = "Couldn’t search Apple Maps. Check your connection and try again."
+            message = "We couldn't reach Apple Maps just now. Check your connection, then give it another try."
         }
     }
 }
