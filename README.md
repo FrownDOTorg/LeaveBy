@@ -2,7 +2,7 @@
 A native SwiftUI departure planner for iOS 17 and later.
 
 ## First milestone
-Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Calendar access, notifications, and widgets are not implemented yet.
+Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Departure reminders are available with notification permission. Calendar access and widgets are not implemented yet.
 
 ## Build from Windows
 Commit and push with GitHub Desktop. The Build iOS workflow uses a standard
@@ -31,3 +31,17 @@ a device release, choose a unique bundle identifier and configure signing.
 On a Mac with Xcode and XcodeGen installed: run `xcodegen generate`, then open
 LeaveBy.xcodeproj. The generated project is ignored because project.yml is the
 source of truth.
+
+## Departure reminders
+Set a reminder after calculating a departure, or use manual travel time. The app
+asks for notification permission only when setting a reminder. One pending reminder
+is supported; setting it again replaces the previous one. It remains scheduled
+when the app closes, including after relaunch. Editing the plan or recalculating
+cancels the old reminder; explicitly set a new one afterward. A denied permission
+shows a link to Settings. Focus and system settings may delay or silence alerts.
+The reminder uses the saved departure, not background traffic updates.
+
+Device validation once signing is ready: allow permission and schedule a manual
+trip departing two minutes from now; check delivery while locked and while the
+app is open. Check cancellation after editing, replacement, relaunch persistence,
+past-departure rejection, and denied permission with Settings recovery.

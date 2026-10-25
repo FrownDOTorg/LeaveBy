@@ -1,13 +1,20 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct LeaveByApp: App {
+    init() {
+        UNUserNotificationCenter.current().delegate = NotificationPresenter.shared
+    }
+
     var body: some Scene {
         WindowGroup { PlannerView() }
     }
 }
 
 struct PlannerView: View {
+    @StateObject private var reminders = ReminderManager()
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("eventTitle") private var title = "My next event"
     @AppStorage("arrivalTime") private var arrivalTimestamp = Date().addingTimeInterval(3600).timeIntervalSince1970
     @AppStorage("travelMinutes") private var travelMinutes = 20
@@ -21,6 +28,10 @@ struct PlannerView: View {
     @State private var calculating = false
     @State private var estimate: TravelEstimate?
     @State private var errorMessage: String?
+
+    private var reminderInputs: String {
+        "\(signature)|\(title)|\(useMaps)|\(travelMinutes)|\(departure?.timeIntervalSince1970 ?? 0)"
+    }
 
     private var origin: SavedPlace? { SavedPlace.decode(originJSON) }
     private var destination: SavedPlace? { SavedPlace.decode(destinationJSON) }
@@ -98,12 +109,40 @@ struct PlannerView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                Section("Departure reminder") {
+                    if let scheduled = reminders.scheduledDate {
+                        Text("Scheduled for \(scheduled.formatted(date: .abbreviated, time: .shortened))")
+                        Button("Cancel reminder", role: .destructive) { reminders.cancel() }
+                    }
+                    Button {
+                        guard let departure else { return }
+                        Task { await reminders.schedule(at: departure, title: title) }
+                    } label: {
+                        if reminders.busy { ProgressView("Setting reminder…") }
+                        else { Text(reminders.scheduledDate == nil ? "Remind me when to leave" : "Update reminder") }
+                    }
+                    .disabled(departure == nil || calculating || reminders.busy)
+                    if reminders.denied {
+                        Button("Open notification settings") { reminders.openSettings() }
+                    }
+                    if let message = reminders.message {
+                        Text(message).font(.footnote).foregroundStyle(.secondary)
+                    }
+                    Text("Uses your saved departure time, without background traffic updates. Focus and notification settings can silence or delay alerts.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
                 Section {
-                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Calendar access, reminders, and widgets will follow.")
+                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Calendar access and widgets will follow.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
+            .disabled(reminders.busy)
             .navigationTitle("LeaveBy")
+            .task { await reminders.refresh() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await reminders.refresh() } }
+            }
+            .onChange(of: reminderInputs) { _, _ in reminders.cancel() }
             .sheet(isPresented: $choosingOrigin) {
                 PlacePicker(title: "Starting point") { originJSON = $0.encoded }
             }
