@@ -6,15 +6,15 @@
     <style name="Theme.LeaveBy.R" parent="Theme.LeaveBy">
         <item name="android:fontFamily">sans</item>
         <item name="android:colorAccent">#85AFF8</item>
-        <item name="android:colorBackground">#101F36</item>
-        <item name="android:windowBackground">#101F36</item>
+        <item name="android:colorBackground">#0B1730</item>
+        <item name="android:windowBackground">#0B1730</item>
         <item name="android:colorBackgroundFloating">#1A2E49</item>
         <item name="android:textColorPrimary">#F1F5FC</item>
         <item name="android:textColorSecondary">#B6C5DC</item>
         <item name="android:textColorHint">#B6C5DC</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#101F36</item>
-        <item name="android:navigationBarColor">#101F36</item>
+        <item name="android:statusBarColor">#0B1730</item>
+        <item name="android:navigationBarColor">#0B1730</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
     <style name="Theme.LeaveBy.J" parent="Theme.LeaveBy">

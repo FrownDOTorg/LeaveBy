@@ -1,7 +1,7 @@
 {
   "R": {
     "name": "R theme",
-    "background": "#101F36",
+    "background": "#0B1730",
     "card": "#1A2E49",
     "field": "#14253E",
     "elevated": "#243F62",
@@ -13,7 +13,7 @@
     "achievement": "#24354E",
     "success": "#9BBEFF",
     "danger": "#FFABBA",
-    "onAccent": "#101F36"
+    "onAccent": "#0B1730"
   },
   "J": {
     "name": "J theme",

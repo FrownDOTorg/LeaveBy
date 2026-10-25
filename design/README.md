@@ -9,7 +9,7 @@ Use design/themes.json as the shared runtime palette for both apps and iOS widge
 
 | Role | R theme | J theme |
 | --- | --- | --- |
-| background | #101F36 | #18191F |
+| background | #0B1730 | #18191F |
 | card | #1A2E49 | #22232C |
 | field | #14253E | #1B1C25 |
 | elevated | #243F62 | #2C2538 |
