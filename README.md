@@ -116,13 +116,14 @@ reminder wording without changing their triggers. New reminders use the saved
 name. Device checks: skip, blank/whitespace, nicknames with apostrophes, Unicode,
 long names, rename/remove, relaunch, and notification/widget wording.
 
-## Android emulator preview
-A separate native Android app is in android/. See android/README.md for its scope
-and installation instructions. Build Android produces a debug APK that can be
-installed in LDPlayer without waiting for Apple enrollment. This Android preview
-has manual travel time, saved calendar plans, personalized names, countdowns, and
-notifications. Maps estimates, calendar import, and widgets are iOS-only for now.
-The Android app cannot validate iOS-specific behavior.
+## Android app
+The native Android app is in android/. See android/README.md for setup and scope.
+Build Android produces a debug APK for LDPlayer or Android phones. It includes
+Home/Calendar/Plans/Settings tabs, saved plans with notes, plan search and filters,
+calendar import, manual travel time, directions links, personalized reminders,
+achievements, R/J themes, and a Home Screen departure widget.
+Live route estimates and cloud/iOS sync remain future integrations.
+Android testing does not validate the separate SwiftUI iOS implementation.
 
 ## Shared design and daily achievements
 See design/README.md for the cross-platform design template. Both apps use the

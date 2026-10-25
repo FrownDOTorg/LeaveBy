@@ -14,6 +14,10 @@ import java.util.*;
 
 public class MainActivity extends Activity {
     private LinearLayout page;
+    private String activeTab="Home", searchQuery="";
+    private int planFilter=0;
+    private EditText notes;
+    private boolean walking=false, importing=false;
     private Calendar day = Calendar.getInstance();
     private Plan draft, permissionPlan;
     private boolean permissionTest, editing = false;
@@ -27,11 +31,13 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         setTheme("R".equals(ThemePalette.selected(this)) ? R.style.Theme_LeaveBy_R : R.style.Theme_LeaveBy_J);
         super.onCreate(state);
-        if(state!=null)day.setTimeInMillis(state.getLong("selectedDay",System.currentTimeMillis()));
+        if(state!=null) { day.setTimeInMillis(state.getLong("selectedDay",System.currentTimeMillis())); activeTab=state.getString("activeTab","Home"); }
         home();
+        String planId=getIntent().getStringExtra("planId");
+        if(planId!=null){Plan linked=PlanStore.find(this,planId);if(linked!=null)edit(linked);}
         if (!PlanStore.prefs(this).getBoolean("nameSet", false)) profile();
     }
-    @Override protected void onResume() { super.onResume(); handler.post(tick); }
+    @Override protected void onResume() { super.onResume(); handler.post(tick); if(!editing)home(); }
     @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
 
     private int INK, MUTED, BLUE, LINE, BACKGROUND, SURFACE, ELEVATED, FIELD, POSITIVE, ACHIEVEMENT, SUCCESS, DANGER;
@@ -82,7 +88,8 @@ public class MainActivity extends Activity {
         rootPage = page;
         int width = Math.min(getResources().getDisplayMetrics().widthPixels, dp(680));
         android.widget.FrameLayout.LayoutParams content = new android.widget.FrameLayout.LayoutParams(width,-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);
-        frame.addView(page,content); scroll.addView(frame); outer.addView(scroll);
+        frame.addView(page,content); scroll.addView(frame); outer.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        if(!editing)outer.addView(navigation());
         setContentView(outer);
         text(heading,30,true);
     }
@@ -133,32 +140,79 @@ public class MainActivity extends Activity {
         return c.get(Calendar.YEAR) == day.get(Calendar.YEAR) && c.get(Calendar.DAY_OF_YEAR) == day.get(Calendar.DAY_OF_YEAR);
     }
 
+    private LinearLayout navigation() {
+        LinearLayout bar=new LinearLayout(this);bar.setGravity(Gravity.CENTER);bar.setPadding(dp(8),dp(7),dp(8),dp(7));
+        bar.setBackgroundColor(SURFACE);
+        String[] tabs={"Home","Calendar","Plans","Settings"};
+        int[] icons={android.R.drawable.ic_menu_myplaces,android.R.drawable.ic_menu_today,android.R.drawable.ic_menu_agenda,android.R.drawable.ic_menu_preferences};
+        for(int i=0;i<tabs.length;i++) {
+            final String tab=tabs[i];boolean selected=tab.equals(activeTab);
+            LinearLayout item=new LinearLayout(this);item.setOrientation(LinearLayout.VERTICAL);item.setGravity(Gravity.CENTER);
+            ImageView icon=new ImageView(this);icon.setImageResource(icons[i]);icon.setColorFilter(selected?BLUE:MUTED);
+            item.addView(icon,new LinearLayout.LayoutParams(dp(22),dp(22)));
+            TextView name=label(tab,11,selected);name.setTextColor(selected?BLUE:MUTED);name.setGravity(Gravity.CENTER);
+            name.setPadding(0,dp(4),0,0);item.addView(name);
+            item.setBackground(ripple(selected?ELEVATED:SURFACE,0));item.setSelected(selected);
+            item.setContentDescription(tab+(selected?", selected":" tab"));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(58),1);lp.setMargins(dp(3),0,dp(3),0);bar.addView(item,lp);
+            item.setOnClickListener(v->{activeTab=tab;home();});
+        }
+        return bar;
+    }
     private void home() {
-        editing=false; draft=null; countdown=null; homeCountdown=null;
+        DepartureWidget.update(this);
+        editing=false;draft=null;countdown=null;homeCountdown=null;
+        if("Calendar".equals(activeTab))calendarScreen();
+        else if("Plans".equals(activeTab))plansScreen();
+        else if("Settings".equals(activeTab))settingsScreen();
+        else dashboard();
+    }
+    private void addPlan() {
+        Plan p=new Plan();Calendar c=(Calendar)day.clone();c.set(Calendar.HOUR_OF_DAY,9);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);
+        p.arrival=sameDay(System.currentTimeMillis())?System.currentTimeMillis()+3_600_000:c.getTimeInMillis();
+        edit(p);
+    }
+    private void dashboard() {
         page("LeaveBy");
         String name=PlanStore.name(this);
-        text(name.isEmpty()?"A little more time. A little less rush.":"Hi, "+name+". A little less rush today.",16,false).setTextColor(MUTED);
-        Button profile=button("Your name & preferences",this::profile); profile.setTextSize(13);
-
-        Plan next=null;
-        for(Plan p:PlanStore.all(this)) if(p.departure()>System.currentTimeMillis() && (next==null || p.departure()<next.departure())) next=p;
-        if(next!=null) {
-            final Plan upcoming=next;
-            beginCard(ELEVATED);
-            text("YOUR NEXT DEPARTURE",11,true).setTextColor(BLUE);
-            text(next.title,23,true);
-            homeDeparture=next.departure();
-            homeCountdown=text("",32,true); homeCountdown.setTextColor(BLUE);
-            caption("Leave "+when(next.departure())+"  ·  Arrive "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(next.arrival)));
-            primary("View your plan",()->edit(upcoming));
-            endCard();
-        } else {
-            beginCard(POSITIVE);
-            text("Room for something good",22,true);
-            caption("Pick a day below and plan your next outing.");
-            endCard();
+        text(name.isEmpty()?"A little more time. A little less rush.":"Hi, "+name+". Let's make room for your day.",16,false).setTextColor(MUTED);
+        List<Plan> plans=PlanStore.all(this);long now=System.currentTimeMillis();
+        Plan next=null;int today=0,reminders=0;
+        for(Plan p:plans) {
+            if(PlanQueries.sameDay(p.arrival,now))today++;
+            if(p.reminder && p.departure()>now)reminders++;
+            if(p.departure()>now && (next==null || p.departure()<next.departure()))next=p;
         }
-
+        if(next!=null) {
+            final Plan upcoming=next;beginCard(ELEVATED);
+            text("YOUR NEXT DEPARTURE",11,true).setTextColor(BLUE);text(next.title,24,true);
+            homeDeparture=next.departure();homeCountdown=text("",34,true);homeCountdown.setTextColor(BLUE);
+            caption("Leave "+when(next.departure()));
+            primary("View your plan",()->edit(upcoming));endCard();
+        } else {
+            beginCard(POSITIVE);text("Room for something good",23,true);
+            caption("Your next outing starts with a little plan.");endCard();
+        }
+        beginCard(SURFACE);
+        text(today+" plans today  ·  "+reminders+" reminders ready",16,true);
+        caption("A clear view of where you're headed.");endCard();
+        primary("+  Plan something",()->{day=Calendar.getInstance();addPlan();});
+        Achievements.Badge badge=Achievements.badge(this,today,now);
+        if(badge!=null)achievementCard(badge);
+        sectionTitle("COMING UP");
+        int shown=0;
+        for(Plan p:plans)if(p.arrival>=now && shown++<3)eventCard(p);
+        if(shown==0)caption("A little breathing room. Your upcoming plans will appear here.");
+        button("See all plans",()->{activeTab="Plans";home();});
+        updateCountdown();
+    }
+    private void achievementCard(Achievements.Badge badge) {
+        beginCard(ACHIEVEMENT);text("DAILY ACHIEVEMENT",11,true).setTextColor(BLUE);
+        text(badge.title,22,true);caption(badge.body);endCard();
+    }
+    private void calendarScreen() {
+        page("Calendar");
+        caption("Your day, with a little more room to breathe.");
         sectionTitle("YOUR CALENDAR");
         button(new java.text.SimpleDateFormat("MMMM yyyy",Locale.getDefault()).format(day.getTime())+"  ·  Choose a date",()->{
             new DatePickerDialog(this,(v,y,m,d)->{day.set(y,m,d);showEarlier=false;home();},
@@ -188,13 +242,8 @@ public class MainActivity extends Activity {
             text(badge.title,22,true);caption(badge.body);endCard();
         }
         sectionTitle(DateFormat.getDateInstance(DateFormat.FULL).format(day.getTime()).toUpperCase(Locale.getDefault()));
-        primary("+  Add a plan",()->{
-            Plan p=new Plan();
-            Calendar c=(Calendar)day.clone();c.set(Calendar.HOUR_OF_DAY,9);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);
-            p.arrival=c.getTimeInMillis();
-            if(sameDay(System.currentTimeMillis()))p.arrival=System.currentTimeMillis()+3_600_000;
-            edit(p);
-        });
+        primary("+  Add a plan",this::addPlan);
+        button("Import this day from your calendar",this::importCalendar);
         int count=0,earlier=0;
         for(Plan p:PlanStore.all(this)) if(sameDay(p.arrival)) {
             count++;
@@ -206,19 +255,118 @@ public class MainActivity extends Activity {
             beginCard(SURFACE); text("A little breathing room",18,true);
             caption("Nothing planned for this day. Add something to look forward to.");endCard();
         }
-        sectionTitle("MAKE IT YOURS");
-        button("Theme: "+ThemePalette.selected(this)+" theme",this::chooseTheme);
-        Switch achievements=new Switch(this);
-        achievements.setText("Playful achievement notifications");
-        achievements.setTextSize(14);achievements.setTextColor(INK);achievements.setMinHeight(dp(48));
-        achievements.setChecked(PlanStore.prefs(this).getBoolean("achievementNotifications",true));
-        achievements.setOnCheckedChangeListener((view,checked)->PlanStore.prefs(this).edit().putBoolean("achievementNotifications",checked).apply());
-        page.addView(achievements);
-        caption("A little celebration at 5, 8, 12, 20, and 30 plans in a day. Uses your existing notification permission.");
-        sectionTitle("TRY IT OUT");
+
+    }
+    private void plansScreen() {
+        page("Your plans");caption("Everything you're looking forward to, in one place.");
+        EditText search=input("Find a plan",searchQuery,false);
+        search.setHint("Search names, places, or notes");
+        String[] filters={"Upcoming","All plans","With reminders"};
+        LinearLayout row=new LinearLayout(this);
+        for(int i=0;i<filters.length;i++) {
+            final int selected=i;TextView chip=label(filters[i],12,planFilter==i);chip.setGravity(Gravity.CENTER);
+            chip.setTextColor(planFilter==i?BACKGROUND:MUTED);chip.setBackground(ripple(planFilter==i?BLUE:SURFACE,LINE));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(48),1);lp.setMargins(dp(2),dp(10),dp(2),dp(8));row.addView(chip,lp);
+            chip.setOnClickListener(v->{planFilter=selected;plansScreen();});
+        }
+        page.addView(row);
+        LinearLayout results=new LinearLayout(this);results.setOrientation(LinearLayout.VERTICAL);page.addView(results);
+        Runnable render=()->{
+            results.removeAllViews();LinearLayout previous=page,previousRoot=rootPage;page=results;rootPage=results;
+            int count=0;String dayLabel="";
+            for(Plan p:PlanStore.all(this)) {
+                if(planFilter==0 && p.arrival<System.currentTimeMillis())continue;
+                if(planFilter==2 && (!p.reminder || p.departure()<=System.currentTimeMillis()))continue;
+                if(!PlanQueries.matches(searchQuery,p.title,p.origin,p.destination,p.notes))continue;
+                String group=DateFormat.getDateInstance(DateFormat.FULL).format(new Date(p.arrival));
+                if(!group.equals(dayLabel)){sectionTitle(group);dayLabel=group;}
+                eventCard(p);count++;
+            }
+            if(count==0){beginCard(SURFACE);text("Nothing here just yet",18,true);caption("Try another search or add a new plan.");endCard();}
+            page=previous;rootPage=previousRoot;
+        };
+        search.addTextChangedListener(new TextWatcher(){
+            public void beforeTextChanged(CharSequence value,int start,int count,int after){}
+            public void onTextChanged(CharSequence value,int start,int before,int count){searchQuery=value.toString();render.run();}
+            public void afterTextChanged(Editable value){}
+        });
+        render.run();
+        primary("+  Add a plan",()->{day=Calendar.getInstance();addPlan();});
+    }
+    private void settingsScreen() {
+        page("Make it yours");caption("Your colors, your reminders, your pace.");
+        sectionTitle("YOU");button("Name: "+(PlanStore.name(this).isEmpty()?"Choose a nickname":PlanStore.name(this)),this::profile);
+        sectionTitle("APPEARANCE");button("Theme: "+ThemePalette.selected(this)+" theme",this::chooseTheme);
+        sectionTitle("REMINDERS");
+        button("Open notification settings",()->startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:"+getPackageName()))));
         button("Send a test notification",()->requestNotification(new Plan(),true));
-        caption("Android preview · Travel time is entered manually. Your plans stay on this device.");
-        updateCountdown();
+        Switch achievements=new Switch(this);achievements.setText("Playful achievement notifications");
+        achievements.setTextColor(INK);achievements.setTextSize(14);achievements.setMinHeight(dp(48));
+        achievements.setChecked(PlanStore.prefs(this).getBoolean("achievementNotifications",true));
+        achievements.setOnCheckedChangeListener((v,checked)->PlanStore.prefs(this).edit().putBoolean("achievementNotifications",checked).apply());
+        page.addView(achievements);caption("A surprise at 5, 8, 12, 20, and 30 daily plans. Departure reminders stay separate.");
+        sectionTitle("YOUR HOME SCREEN");button("Add a departure widget",this::addWidget);
+        sectionTitle("ABOUT YOUR PLANS");
+        beginCard(SURFACE);text("Saved on this device",17,true);
+        caption("Your plans, name, and theme stay here. Calendar imports are copies, not a two-way sync.");
+        caption("Travel time is manual. Open directions to check your route, then enter the estimate you want to use.");
+        caption("Android may delay departure reminders. Keep your emulator running during testing.");endCard();
+    }
+
+    private void openDirections() {
+        String to=destination.getText().toString().trim(),from=origin.getText().toString().trim();
+        if(to.isEmpty()){destination.setError("Where are we headed? Add a destination first.");return;}
+        android.net.Uri.Builder uri=android.net.Uri.parse("https://www.google.com/maps/dir/").buildUpon()
+            .appendQueryParameter("api","1").appendQueryParameter("destination",to)
+            .appendQueryParameter("travelmode",walking?"walking":"driving");
+        if(!from.isEmpty())uri.appendQueryParameter("origin",from);
+        try {startActivity(new Intent(Intent.ACTION_VIEW,uri.build()));}
+        catch(ActivityNotFoundException e){toast("No Maps app or browser is available here. Install one to open directions.");}
+    }
+    private void importCalendar() {
+        if(importing)return;
+        if(checkSelfPermission(Manifest.permission.READ_CALENDAR)!=PackageManager.PERMISSION_GRANTED) {
+            new AlertDialog.Builder(this).setTitle("Bring your calendar along")
+                .setMessage("Allow calendar access to choose timed events from this day. LeaveBy only reads your calendars and makes separate copies.")
+                .setPositiveButton("Choose events",(dialog,which)->requestPermissions(new String[]{Manifest.permission.READ_CALENDAR},8))
+                .setNegativeButton("Maybe later",null).show();return;
+        }
+        importing=true;long selectedDay=day.getTimeInMillis();
+        new Thread(()->{
+            try {
+                List<Plan> found=CalendarImports.read(this,selectedDay);
+                runOnUiThread(()->{
+                    importing=false;if(isFinishing() || isDestroyed())return;
+                    if(found.isEmpty()){
+                        new AlertDialog.Builder(this).setTitle("Nothing to bring over yet")
+                            .setMessage("No new timed events start on this day. Existing imports and all-day events are skipped. Your emulator may not have a calendar account or events yet.")
+                            .setPositiveButton("Got it",null).show();return;
+                    }
+                    String[] labels=new String[found.size()];boolean[] selected=new boolean[found.size()];
+                    for(int i=0;i<found.size();i++)labels[i]=found.get(i).title+" · "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(found.get(i).arrival));
+                    new AlertDialog.Builder(this).setTitle("Choose events to copy")
+                        .setMultiChoiceItems(labels,selected,(dialog,index,checked)->selected[index]=checked)
+                        .setPositiveButton("Import selected",(dialog,which)->{
+                            List<Plan> incoming=new ArrayList<>();
+                            for(int i=0;i<found.size();i++)if(selected[i])incoming.add(found.get(i));
+                            int count=PlanStore.importPlans(this,incoming);
+                            toast(count+" plans copied. Your original events stay unchanged.");home();
+                        }).setNegativeButton("Cancel",null).show();
+                });
+            }catch(Exception e){
+                runOnUiThread(()->{importing=false;if(!isFinishing() && !isDestroyed())toast("We couldn't read your calendar just now. Check calendar access in Settings, then try again.");});
+            }
+        },"leaveby-calendar-import").start();
+    }
+    private void addWidget() {
+        android.appwidget.AppWidgetManager manager=android.appwidget.AppWidgetManager.getInstance(this);
+        if(Build.VERSION.SDK_INT>=26 && manager.isRequestPinAppWidgetSupported()) {
+            manager.requestPinAppWidget(new ComponentName(this,DepartureWidget.class),null,null);
+        } else {
+            new AlertDialog.Builder(this).setTitle("Your next departure, at a glance")
+                .setMessage("Long-press an empty area on the Android Home Screen, choose Widgets, then add LeaveBy. Your launcher controls which widgets are available.")
+                .setPositiveButton("Got it",null).show();
+        }
     }
 
     private void eventCard(Plan p) {
@@ -228,7 +376,7 @@ public class MainActivity extends Activity {
         meta.setTextColor(BLUE);meta.setLetterSpacing(0.06f);
         text(p.title,20,true);
         if(!p.destination.isEmpty())caption(p.destination);
-        caption("Leave "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(p.departure()))+
+        caption(DateFormat.getDateInstance(DateFormat.MEDIUM).format(new Date(p.arrival))+"  ·  Leave "+DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(p.departure()))+
             "  ·  "+p.travel+" min travel  ·  "+p.buffer+" min extra");
         TextView state=text(p.reminder && p.departure()>System.currentTimeMillis()?"Reminder set":"Tap to view your plan",12,false);
         state.setTextColor(p.reminder?SUCCESS:MUTED);
@@ -242,11 +390,12 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("Make it your own")
             .setSingleChoiceItems(choices,checked,(dialog,index)->{
                 PlanStore.prefs(this).edit().putString("appearanceTheme",index==0?"R":"J").apply();
-                dialog.dismiss();recreate();
+                dialog.dismiss();DepartureWidget.update(this);recreate();
             }).setNegativeButton("Keep current theme",null).show();
     }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putLong("selectedDay",day.getTimeInMillis());
+        state.putString("activeTab",activeTab);
         super.onSaveInstanceState(state);
     }
 
@@ -265,12 +414,19 @@ public class MainActivity extends Activity {
     private void edit(Plan plan) {
         editing = true; draft = plan; homeCountdown = null;
         page("Your next plan");
-        button("Back to calendar", this::confirmBack);
+        button("Back to "+activeTab.toLowerCase(Locale.getDefault()), this::confirmBack);
         sectionTitle("THE PLAN");
         beginCard(SURFACE);
         title = input("Event name", plan.title, false);
         origin = input("Starting point (optional)",plan.origin,false);
         destination = input("Destination (optional)",plan.destination,false);
+        notes=input("Notes (optional)",plan.notes,false);
+        walking=plan.walking;
+        Switch mode=new Switch(this);mode.setText("Walking instead of driving");mode.setTextColor(INK);mode.setMinHeight(dp(48));mode.setChecked(walking);
+        mode.setOnCheckedChangeListener((view,checked)->walking=checked);page.addView(mode);
+        button("Open directions",this::openDirections);
+        caption("Directions open in Maps or your browser. Enter the travel estimate below; it won't update automatically.");
+        if(!plan.sourceKey.isEmpty())caption("Copied from your calendar. Your original event stays unchanged.");
         endCard();
         sectionTitle("WHEN TO BE THERE");
         beginCard(SURFACE);
@@ -348,7 +504,7 @@ public class MainActivity extends Activity {
         String eventTitle=title.getText().toString().trim();
         if (eventTitle.isEmpty()) { title.setError("What shall we call this plan?"); return null; }
         draft.title=eventTitle; draft.origin=origin.getText().toString().trim(); draft.destination=destination.getText().toString().trim();
-        draft.travel=t; draft.buffer=b; draft.reminder=false;
+        draft.travel=t; draft.buffer=b; draft.reminder=false;draft.notes=notes.getText().toString().trim();draft.walking=walking;
         ReminderReceiver.cancel(this,draft.id); PlanStore.put(this,draft); return draft;
     }
     private void requestNotification(Plan p, boolean test) {
@@ -378,6 +534,7 @@ public class MainActivity extends Activity {
     @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] results) {
         super.onRequestPermissionsResult(code,permissions,results);
         if (code==7 && permissionPlan!=null) finishNotification();
+        if(code==8){if(results.length>0 && results[0]==PackageManager.PERMISSION_GRANTED)importCalendar();else toast("Calendar access is off. You can still add plans yourself, or enable access in Settings.");}
     }
     private void toast(String message) { Toast.makeText(this,message,Toast.LENGTH_LONG).show(); }
     private void confirmBack() {
@@ -386,5 +543,5 @@ public class MainActivity extends Activity {
             .setPositiveButton("Save & go back",(d,w)->{if(saveDraft()!=null)home();})
             .setNegativeButton("Discard changes",(d,w)->home()).setNeutralButton("Keep editing",null).show();
     }
-    @Override public void onBackPressed() { if(editing) confirmBack(); else super.onBackPressed(); }
+    @Override public void onBackPressed() { if(editing) confirmBack(); else if(!"Home".equals(activeTab)){activeTab="Home";home();}else super.onBackPressed(); }
 }

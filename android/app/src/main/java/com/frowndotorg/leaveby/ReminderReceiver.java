@@ -33,8 +33,8 @@ public class ReminderReceiver extends BroadcastReceiver {
         if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(new NotificationChannel(CHANNEL, "Departure reminders", NotificationManager.IMPORTANCE_HIGH));
         String name = PlanStore.name(c);
         String heading = test ? "Your test reminder is here!" : (name.isEmpty() ? "Time to head out" : name + ", it's time to head out");
-        Intent open = new Intent(c, MainActivity.class);
-        PendingIntent tap = PendingIntent.getActivity(c, 0, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Intent open = new Intent(c, MainActivity.class).putExtra("planId", p.id);
+        PendingIntent tap = PendingIntent.getActivity(c, p.id.hashCode(), open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
         b.setSmallIcon(com.frowndotorg.leaveby.R.drawable.ic_leaveby)
             .setContentTitle(heading).setContentText(test ? "You're ready to try LeaveBy reminders." : "Time to leave for " + p.title + ". Have a good trip!")

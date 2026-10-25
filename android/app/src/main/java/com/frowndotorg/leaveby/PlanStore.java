@@ -33,10 +33,18 @@ public final class PlanStore {
     public static void delete(Context c, String id) {
         List<Plan> plans = all(c); plans.removeIf(p -> p.id.equals(id)); write(c, plans);
     }
+    public static int importPlans(Context c,List<Plan> incoming) {
+        List<Plan> plans=all(c);java.util.Set<String> keys=new java.util.HashSet<>();
+        for(Plan p:plans)if(!p.sourceKey.isEmpty())keys.add(p.sourceKey);
+        int added=0;
+        for(Plan p:incoming)if(p.sourceKey.isEmpty() || keys.add(p.sourceKey)){plans.add(p);added++;}
+        write(c,plans);Achievements.evaluate(c,plans);return added;
+    }
     private static void write(Context c, List<Plan> plans) {
         JSONArray a = new JSONArray();
         try { for (Plan p : plans) a.put(p.json()); }
         catch (JSONException e) { throw new IllegalStateException(e); }
         prefs(c).edit().putString("plans", a.toString()).apply();
+        DepartureWidget.update(c);
     }
 }
