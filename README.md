@@ -115,3 +115,11 @@ may be visible in notification previews. Editing the name refreshes pending
 reminder wording without changing their triggers. New reminders use the saved
 name. Device checks: skip, blank/whitespace, nicknames with apostrophes, Unicode,
 long names, rename/remove, relaunch, and notification/widget wording.
+
+## Android emulator preview
+A separate native Android app is in android/. See android/README.md for its scope
+and installation instructions. Build Android produces a debug APK that can be
+installed in LDPlayer without waiting for Apple enrollment. This Android preview
+has manual travel time, saved calendar plans, personalized names, countdowns, and
+notifications. Maps estimates, calendar import, and widgets are iOS-only for now.
+The Android app cannot validate iOS-specific behavior.

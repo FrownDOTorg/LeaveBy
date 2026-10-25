@@ -8,3 +8,10 @@ build/
 *.mobileprovision
 *.cer
 *.key
+
+# Android local builds
+android/.gradle/
+android/**/build/
+android/local.properties
+*.keystore
+*.jks
