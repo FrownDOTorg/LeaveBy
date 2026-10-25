@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import WidgetKit
 
 struct EventPlan: Codable, Identifiable, Equatable {
     var id = UUID()
@@ -11,6 +12,19 @@ struct EventPlan: Codable, Identifiable, Equatable {
     var destinationJSON = ""
     var walking = false
     var useMaps = true
+    var mapsDepartureTimestamp: Double?
+    var mapsEstimateSignature: String?
+
+    var routeSignature: String {
+        "\(originJSON)|\(destinationJSON)|\(walking)|\(arrivalTimestamp)|\(bufferMinutes)"
+    }
+    var widgetDeparture: Date? {
+        if useMaps {
+            guard mapsEstimateSignature == routeSignature, let timestamp = mapsDepartureTimestamp else { return nil }
+            return Date(timeIntervalSince1970: timestamp)
+        }
+        return arrival.addingTimeInterval(-Double((travelMinutes + bufferMinutes) * 60))
+    }
 
     var arrival: Date { Date(timeIntervalSince1970: arrivalTimestamp) }
     var reminderIdentifier: String { "leaveby.departure.\(id.uuidString)" }
@@ -42,6 +56,17 @@ enum EventStorage {
     static func save(_ events: [EventPlan]) {
         guard let data = try? JSONEncoder().encode(events) else { return }
         UserDefaults.standard.set(data, forKey: key)
+        publishWidgets(events)
+    }
+
+    static func publishWidgets(_ events: [EventPlan]) {
+        let departures = events.compactMap { event -> WidgetDeparture? in
+            guard let date = event.widgetDeparture else { return nil }
+            return WidgetDeparture(id: event.id, title: event.title.isEmpty ? "Untitled event" : event.title,
+                                   departure: date, usesMaps: event.useMaps)
+        }
+        WidgetStore.save(departures)
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetStore.kind)
     }
 }
 
@@ -86,7 +111,7 @@ struct CalendarHomeView: View {
                     }
                 }
                 Section {
-                    Text("Events are saved on this device in LeaveBy. Apple Calendar import and widgets will follow.")
+                    Text("Events are saved on this device in LeaveBy. Apple Calendar import will follow. Widgets show the next saved departure.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -111,6 +136,7 @@ struct CalendarHomeView: View {
             } message: {
                 Text("This also cancels the event’s departure reminder.")
             }
+            .task { EventStorage.publishWidgets(events) }
             .onChange(of: events) { _, value in EventStorage.save(value) }
         }
     }

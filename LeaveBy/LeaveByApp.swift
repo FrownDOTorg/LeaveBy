@@ -68,7 +68,7 @@ struct PlannerView: View {
     private var origin: SavedPlace? { SavedPlace.decode(originJSON) }
     private var destination: SavedPlace? { SavedPlace.decode(destinationJSON) }
     private var signature: String {
-        "\(originJSON)|\(destinationJSON)|\(walking)|\(arrivalTimestamp)|\(bufferMinutes)"
+        plan.routeSignature
     }
     private var validEstimate: TravelEstimate? {
         guard let estimate, estimate.signature == signature else { return nil }
@@ -164,7 +164,7 @@ struct PlannerView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section {
-                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Apple Calendar import and widgets will follow.")
+                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Widgets show the next saved departure. Apple Calendar import will follow.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -201,6 +201,8 @@ struct PlannerView: View {
         guard !calculating, let origin, let destination else { return }
         errorMessage = nil
         estimate = nil
+        plan.mapsDepartureTimestamp = nil
+        plan.mapsEstimateSignature = nil
         let tripSignature = signature
         let targetArrival = Date(timeIntervalSince1970: arrivalTimestamp)
             .addingTimeInterval(-Double(bufferMinutes * 60))
@@ -219,6 +221,8 @@ struct PlannerView: View {
                 return
             }
             estimate = TravelEstimate(signature: tripSignature, seconds: seconds, fetchedAt: .now)
+            plan.mapsDepartureTimestamp = targetArrival.addingTimeInterval(-seconds).timeIntervalSince1970
+            plan.mapsEstimateSignature = tripSignature
         } catch {
             guard tripSignature == signature else { return }
             errorMessage = "Couldn’t calculate this trip. Check your connection, try more precise places, or switch to manual travel time."

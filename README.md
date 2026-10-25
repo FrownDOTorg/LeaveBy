@@ -2,7 +2,7 @@
 A native SwiftUI departure planner for iOS 17 and later.
 
 ## First milestone
-Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Departure reminders are available with notification permission. A built-in calendar supports multiple locally saved events. Apple Calendar import and widgets are not implemented yet.
+Enter an event and arrival time, search Apple Maps for both places, then choose driving or walking and calculate travel time. Extra time shifts the requested arrival earlier. Manual travel duration is also available. Places and settings persist; estimates must be recalculated after trip changes or relaunch. Departure reminders are available with notification permission. A built-in calendar supports multiple locally saved events. Apple Calendar import is not implemented yet. Home and Lock Screen widget code is included; device validation is pending.
 
 ## Build from Windows
 Commit and push with GitHub Desktop. The Build iOS workflow uses a standard
@@ -19,7 +19,7 @@ provisioning profiles expire after seven days. Choosing a distribution method
 for friends is a separate step; a successful simulator build does not establish
 sideloading support.
 
-Widgets require a WidgetKit extension. Sharing event data normally uses an
+Widgets use the included WidgetKit extension. Sharing event data normally uses an
 App Group. Confirm signing and sideloading support for the widget extension
 and its entitlements before relying on widgets. Widget refresh is controlled by
 iOS; widgets cannot continuously poll Maps. A system-rendered countdown can
@@ -60,3 +60,24 @@ This calendar does not yet read or write the iPhone's Apple Calendar.
 Device checks: create two events on different dates, edit and reopen both, restart
 the app to verify persistence, schedule independent reminders, and delete one to
 confirm the other remains. Check that changing an event date moves it to that day.
+
+## Home and Lock Screen widgets
+The app embeds LeaveByWidgets. Small and medium Home widgets and inline, circular,
+and rectangular Lock Screen widgets show the next future departure across events.
+Manual trips use entered travel time; Maps trips need a successfully calculated
+estimate. The snapshot is kept for widgets across launches. Changes to the route,
+arrival time, or buffer invalidate it until recalculation. A widget countdown uses
+system-rendered timer text; widget refresh and event transitions remain subject
+to iOS scheduling. It does not continuously check traffic. Event details are marked
+privacy-sensitive for system redaction. Tapping a widget opens the app.
+
+Before signing, register group.com.frowndotorg.leaveby as an App Group and enable it
+for BOTH the app and widget identifiers. Both targets reference
+Shared/LeaveBy.entitlements and Shared/WidgetStore.swift. If the group identifier
+must change, update both files together. The current unsigned simulator build
+checks compilation and embedding; it does not validate App Group provisioning.
+No signing credentials belong in the repository.
+
+On-device checks after enrollment: launch LeaveBy, create a manual future trip,
+add each widget size, then verify a Maps trip, empty state, countdown at departure,
+next-event transition, edit/delete propagation, relaunch, and Lock Screen privacy.

@@ -7,19 +7,45 @@ settings:
   base:
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
 targets:
   LeaveBy:
     type: application
     platform: iOS
-    sources: [LeaveBy]
+    sources:
+      - LeaveBy
+      - path: Shared
+        excludes: ["*.entitlements"]
+    dependencies:
+      - target: LeaveByWidgets
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.leaveby.planner
+        CODE_SIGN_ENTITLEMENTS: Shared/LeaveBy.entitlements
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
+  LeaveByWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - LeaveByWidgets
+      - path: Shared
+        excludes: ["*.entitlements"]
+    info:
+      path: LeaveByWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: LeaveBy
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.leaveby.planner.widgets
+        CODE_SIGN_ENTITLEMENTS: Shared/LeaveBy.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
 schemes:
   LeaveBy:
     build:
