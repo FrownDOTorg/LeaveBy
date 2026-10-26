@@ -79,7 +79,12 @@ struct PlannerView: View {
                 set: { arrivalTimestamp = $0.timeIntervalSince1970 })
     }
     private var travelSeconds: TimeInterval? {
-        useMaps ? validEstimate?.seconds : Double(travelMinutes * 60)
+        useMaps ? (validEstimate?.seconds ?? savedTravelSeconds) : Double(travelMinutes * 60)
+    }
+    private var savedTravelSeconds: TimeInterval? {
+        guard plan.mapsEstimateSignature == signature, let departure = plan.mapsDepartureTimestamp else { return nil }
+        let seconds = arrivalTimestamp - Double(bufferMinutes * 60) - departure
+        return seconds.isFinite && seconds >= 0 ? seconds : nil
     }
     private var departure: Date? {
         guard let travelSeconds else { return nil }
@@ -102,6 +107,12 @@ struct PlannerView: View {
                         Text("Tap To to find and confirm this place in Apple Maps.")
                             .font(.caption).foregroundStyle(LeaveByColors.muted)
                     }
+                }
+                .listRowBackground(LeaveByColors.card)
+                Section("A note for later") {
+                    TextField("Place details, a door code, or anything to remember", text: Binding(
+                        get: { plan.notes ?? "" }, set: { plan.notes = $0 }), axis: .vertical)
+                        .lineLimit(3...8)
                 }
                 .listRowBackground(LeaveByColors.card)
                 Section("Travel") {
@@ -186,7 +197,7 @@ struct PlannerView: View {
             .background(LeaveByTheme.background)
             .disabled(reminders.busy)
             .leaveByColors()
-            .navigationTitle("Event details")
+            .navigationTitle("Your plan")
             .toolbar { ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }.disabled(reminders.busy)
             } }

@@ -14,6 +14,8 @@ private struct LeaveByAppearance: ViewModifier {
             .foregroundStyle(LeaveByColors.color("text", theme: selectedTheme))
             .tint(LeaveByColors.color("accent", theme: selectedTheme))
             .preferredColorScheme(selectedTheme == "Light" ? .light : .dark)
+            .toolbarBackground(LeaveByColors.card, for: .tabBar, .navigationBar)
+            .toolbarBackground(.visible, for: .tabBar)
             .dynamicTypeSize(.xLarge ... .accessibility5)
     }
 }
