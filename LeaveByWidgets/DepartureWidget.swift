@@ -97,7 +97,7 @@ struct DepartureWidgetView: View {
     @ViewBuilder private func countdown(_ trip: WidgetDeparture) -> some View {
         if trip.departure > entry.date {
             Text(timerInterval: entry.date...trip.departure, countsDown: true)
-                .monospacedDigit().lineLimit(1)
+                .monospacedDigit().lineLimit(1).foregroundStyle(LeaveByColors.accent)
         } else {
             Text("Leave now")
         }

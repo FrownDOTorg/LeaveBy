@@ -4,6 +4,7 @@ import UserNotifications
 @main
 struct LeaveByApp: App {
     init() {
+        BackgroundUpdates.register()
         UNUserNotificationCenter.current().delegate = NotificationPresenter.shared
     }
 
@@ -55,6 +56,7 @@ struct PlannerView: View {
         get { plan.useMaps }
         nonmutating set { plan.useMaps = newValue }
     }
+    @FocusState private var keyboardFocused: Bool
     @State private var choosingOrigin = false
     @State private var choosingDestination = false
     @State private var calculating = false
@@ -81,11 +83,7 @@ struct PlannerView: View {
     private var travelSeconds: TimeInterval? {
         useMaps ? (validEstimate?.seconds ?? savedTravelSeconds) : Double(travelMinutes * 60)
     }
-    private var savedTravelSeconds: TimeInterval? {
-        guard plan.mapsEstimateSignature == signature, let departure = plan.mapsDepartureTimestamp else { return nil }
-        let seconds = arrivalTimestamp - Double(bufferMinutes * 60) - departure
-        return seconds.isFinite && seconds >= 0 ? seconds : nil
-    }
+    private var savedTravelSeconds: TimeInterval? { plan.savedTravelSeconds }
     private var departure: Date? {
         guard let travelSeconds else { return nil }
         return Date(timeIntervalSince1970: arrivalTimestamp)
@@ -96,7 +94,7 @@ struct PlannerView: View {
         NavigationStack {
             Form {
                 Section("Your next event") {
-                    TextField("Event name", text: $plan.title)
+                    TextField("Event name", text: $plan.title).focused($keyboardFocused)
                     DatePicker("Arrive by", selection: arrival)
                     if plan.importedOccurrenceKey != nil {
                         Text("Your calendar event is copied here. Make it your own; your original stays unchanged.")
@@ -112,7 +110,7 @@ struct PlannerView: View {
                 Section("A note for later") {
                     TextField("Place details, a door code, or anything to remember", text: Binding(
                         get: { plan.notes ?? "" }, set: { plan.notes = $0 }), axis: .vertical)
-                        .lineLimit(3...8)
+                        .lineLimit(3...8).focused($keyboardFocused)
                 }
                 .listRowBackground(LeaveByColors.card)
                 Section("Travel") {
@@ -128,14 +126,12 @@ struct PlannerView: View {
                             Text("Driving").tag(false)
                             Text("Walking").tag(true)
                         }
-                        Button { Task { await calculate() } } label: {
-                            if calculating { ProgressView("Calculating…") }
-                            else { Text("Calculate travel time") }
+                        ViewThatFits(in: .horizontal) {
+                            HStack { calculateButton; estimateBadge }
+                            VStack(alignment: .leading, spacing: 8) { calculateButton; estimateBadge }
                         }
-                        .disabled(calculating || origin == nil || destination == nil)
-                        if let validEstimate {
-                            Text("Estimated travel: \(Int(ceil(validEstimate.seconds / 60))) minutes")
-                            Text("Updated \(validEstimate.fetchedAt.formatted(date: .omitted, time: .shortened)). Estimates can change; recalculate before leaving.")
+                        if let updated = plan.mapsUpdatedAt, plan.savedTravelSeconds != nil {
+                            Text("Updated \(Date(timeIntervalSince1970: updated).formatted(date: .abbreviated, time: .shortened))")
                                 .font(.caption).foregroundStyle(LeaveByColors.muted)
                         }
                         if let errorMessage {
@@ -157,7 +153,7 @@ struct PlannerView: View {
                             } else {
                                 Text(FriendlyCopy.departurePassed)
                             }
-                        }
+                        }.foregroundStyle(LeaveByColors.accent)
                     } else {
                         Text("Where are we headed? Choose your places, then calculate your travel time. Refresh it whenever your plans change.")
                             .foregroundStyle(LeaveByColors.muted)
@@ -183,25 +179,30 @@ struct PlannerView: View {
                     if let message = reminders.message {
                         Text(message).font(.footnote).foregroundStyle(LeaveByColors.muted)
                     }
-                    Text("Uses your saved departure time, without background traffic updates. Focus and notification settings can silence or delay alerts.")
+                    Text("Automatic refresh can update saved travel estimates and active reminders when iOS allows it. Focus and notification settings can silence or delay alerts.")
                         .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
                 .listRowBackground(LeaveByColors.card)
                 Section {
-                    Text("Extra time brings your planned arrival earlier by that amount. No device location access is needed. Widgets show the next saved departure. Use Import in the calendar to copy existing events.")
+                    Text("Extra time brings your planned arrival earlier by that amount. Location is used only when you choose My Location; background refresh uses the saved starting point. Widgets show the next saved departure. Use Sync calendars to keep selected calendars connected.")
                         .font(.footnote).foregroundStyle(LeaveByColors.muted)
                 }
                 .listRowBackground(LeaveByColors.card)
             }
+            .scrollDismissesKeyboard(.interactively)
             .scrollContentBackground(.hidden)
             .background(LeaveByTheme.background)
             .disabled(reminders.busy)
             .leaveByColors()
             .navigationTitle("Your plan")
-            .toolbar { ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }.disabled(reminders.busy)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Hide keyboard") { keyboardFocused = false } }
+                ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { keyboardFocused = false; dismiss() }.disabled(reminders.busy)
             } }
-            .task { await reminders.refresh() }
+            .onAppear { BackgroundUpdates.editing = true }
+            .onDisappear { BackgroundUpdates.editing = false }
+            .task { plan.migrateEstimate(); await reminders.refresh() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { Task { await reminders.refresh() } }
             }
@@ -212,8 +213,21 @@ struct PlannerView: View {
             .sheet(isPresented: $choosingDestination) {
                 PlacePicker(title: "Destination", initialQuery: plan.importedLocation ?? "") { destinationJSON = $0.encoded }
             }
+            .onChange(of: plan.bufferMinutes) { _, _ in plan.migrateEstimate() }
             .onChange(of: signature) { _, _ in estimate = nil; errorMessage = nil }
         }
+    }
+
+    private var calculateButton: some View {
+        Button { keyboardFocused = false; Task { await calculate() } } label: {
+            if calculating { ProgressView("Calculating...") }
+            else { Text("Calculate travel time") }
+        }.disabled(calculating || origin == nil || destination == nil)
+    }
+    private var estimateBadge: some View {
+        Text(plan.savedTravelSeconds.map { "Estimated \(walking ? "walk" : "drive"): \(Int(ceil($0 / 60))) min" } ?? "Estimate needed")
+            .font(.subheadline.bold()).foregroundStyle(LeaveByColors.accent)
+            .padding(10).background(LeaveByColors.elevated, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func placeLabel(_ label: String, place: SavedPlace?) -> some View {
@@ -233,7 +247,6 @@ struct PlannerView: View {
         plan.mapsEstimateSignature = nil
         let tripSignature = signature
         let targetArrival = Date(timeIntervalSince1970: arrivalTimestamp)
-            .addingTimeInterval(-Double(bufferMinutes * 60))
         guard targetArrival > .now else {
             errorMessage = "Let's pick a later arrival so there's room for your extra time, too."
             return
@@ -249,6 +262,8 @@ struct PlannerView: View {
                 return
             }
             estimate = TravelEstimate(signature: tripSignature, seconds: seconds, fetchedAt: .now)
+            plan.mapsTravelSeconds = seconds
+            plan.mapsUpdatedAt = Date().timeIntervalSince1970
             plan.mapsDepartureTimestamp = targetArrival.addingTimeInterval(-seconds).timeIntervalSince1970
             plan.mapsEstimateSignature = tripSignature
         } catch {

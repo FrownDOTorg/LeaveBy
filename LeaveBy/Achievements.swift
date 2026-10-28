@@ -45,7 +45,7 @@ enum Achievements {
             .replacingOccurrences(of: "{day}", with: dayText)
         return DailyAchievement(title: tier.titles[choice % tier.titles.count], body: body, milestone: tier.count)
     }
-    static func evaluate(_ events: [EventPlan]) {
+    static func evaluate(_ events: [EventPlan], notify: Bool = true) {
         let groups = Dictionary(grouping: events, by: { dayKey($0.arrival) })
         for (key, plans) in groups {
             guard let day = plans.first?.arrival,
@@ -54,7 +54,7 @@ enum Achievements {
             guard badge.milestone > UserDefaults.standard.integer(forKey: seenKey) else { continue }
             // Record before the async permission check: edits/reloads cannot replay a milestone.
             UserDefaults.standard.set(badge.milestone, forKey: seenKey)
-            guard enabled, day >= Calendar.current.startOfDay(for: .now) else { continue }
+            guard notify, enabled, day >= Calendar.current.startOfDay(for: .now) else { continue }
             Task {
                 let center = UNUserNotificationCenter.current()
                 let settings = await center.notificationSettings()
@@ -70,4 +70,3 @@ enum Achievements {
         }
     }
 }
-

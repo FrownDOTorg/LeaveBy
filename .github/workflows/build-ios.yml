@@ -23,6 +23,10 @@ jobs:
             echo "::error::App Store Connect requires iOS SDK 26 or newer."
             exit 1
           fi
+      - name: Test departure calculations
+        run: |
+          swiftc -parse-as-library LeaveBy/EventPlan.swift tests/DepartureRegression.swift -o "$RUNNER_TEMP/departure-tests"
+          "$RUNNER_TEMP/departure-tests"
       - name: Install project generator
         run: brew install xcodegen
       - name: Generate Xcode project

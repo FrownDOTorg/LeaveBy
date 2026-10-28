@@ -1,37 +1,8 @@
 import SwiftUI
 import UserNotifications
 import WidgetKit
-
-struct EventPlan: Codable, Identifiable, Equatable {
-    var id = UUID()
-    var title = "New event"
-    var arrivalTimestamp = Date().addingTimeInterval(3600).timeIntervalSince1970
-    var travelMinutes = 20
-    var bufferMinutes = 10
-    var originJSON = ""
-    var destinationJSON = ""
-    var walking = false
-    var useMaps = true
-    var importedOccurrenceKey: String?
-    var importedLocation: String?
-    var notes: String?
-    var mapsDepartureTimestamp: Double?
-    var mapsEstimateSignature: String?
-
-    var routeSignature: String {
-        "\(originJSON)|\(destinationJSON)|\(walking)|\(arrivalTimestamp)|\(bufferMinutes)"
-    }
-    var widgetDeparture: Date? {
-        if useMaps {
-            guard mapsEstimateSignature == routeSignature, let timestamp = mapsDepartureTimestamp else { return nil }
-            return Date(timeIntervalSince1970: timestamp)
-        }
-        return arrival.addingTimeInterval(-Double((travelMinutes + bufferMinutes) * 60))
-    }
-
-    var arrival: Date { Date(timeIntervalSince1970: arrivalTimestamp) }
-    var reminderIdentifier: String { "leaveby.departure.\(id.uuidString)" }
-}
+import EventKit
+import Combine
 
 enum EventStorage {
     static let key = "savedEvents.v1"
@@ -39,7 +10,9 @@ enum EventStorage {
     static func load() -> [EventPlan] {
         let defaults = UserDefaults.standard
         if let data = defaults.data(forKey: key) {
-            return (try? JSONDecoder().decode([EventPlan].self, from: data)) ?? []
+            return ((try? JSONDecoder().decode([EventPlan].self, from: data)) ?? []).map { value in
+                var plan = value; plan.migrateEstimate(); return plan
+            }
         }
         guard defaults.object(forKey: "arrivalTime") != nil else { return [] }
         var old = EventPlan()
@@ -56,11 +29,11 @@ enum EventStorage {
         return [old]
     }
 
-    static func save(_ events: [EventPlan]) {
+    static func save(_ events: [EventPlan], celebrate: Bool = true) {
         guard let data = try? JSONEncoder().encode(events) else { return }
         UserDefaults.standard.set(data, forKey: key)
         publishWidgets(events)
-        Achievements.evaluate(events)
+        Achievements.evaluate(events, notify: celebrate)
     }
 
     static func publishWidgets(_ events: [EventPlan]) {
@@ -117,19 +90,14 @@ struct CalendarHomeView: View {
             NavigationStack { PlannerSettingsView { showingProfile = true } }
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }.tag(3)
         }
+        .id(selectedTheme)
         .leaveByColors()
         .sheet(isPresented: $showingProfile) { ProfileView().interactiveDismissDisabled() }
-        .sheet(item: $selected, onDismiss: { Task { await refreshReminders() } }) { event in
-            PlannerView(plan: binding(for: event)).id(event.id).interactiveDismissDisabled()
+        .sheet(item: $selected, onDismiss: { BackgroundUpdates.editing = false; Task { await refreshAll() } }) { event in
+            PlannerView(plan: binding(for: event)).id("\(event.id)-\(selectedTheme)").interactiveDismissDisabled()
         }
         .sheet(isPresented: $importing) {
-            CalendarImportView(day: day, existingKeys: Set(events.compactMap(\.importedOccurrenceKey))) { incoming in
-                let existing = Set(events.compactMap(\.importedOccurrenceKey))
-                events.append(contentsOf: incoming.filter { event in
-                    guard let key = event.importedOccurrenceKey else { return true }
-                    return !existing.contains(key)
-                })
-            }
+            CalendarSyncView { Task { await refreshAll() } }
         }
         .alert("Delete plan?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } })) {
             Button("Delete", role: .destructive) { deleteEvent() }
@@ -140,15 +108,20 @@ struct CalendarHomeView: View {
         .task {
             syncProfile()
             EventStorage.publishWidgets(events)
-            await refreshReminders()
+            await refreshAll()
             if !didChooseName { showingProfile = true }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await refreshReminders() } }
+            if phase == .active { Task { await refreshAll() } }
+            if phase == .background { BackgroundUpdates.schedule() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("LeaveByCalendarSync"))) { _ in Task { await refreshAll() } }
+        .onReceive(NotificationCenter.default.publisher(for: .EKEventStoreChanged).debounce(for: .seconds(1), scheduler: RunLoop.main)) { _ in
+            Task { await refreshAll() }
         }
         .onChange(of: selectedTheme) { _, _ in syncProfile() }
         .onChange(of: preferredName) { _, _ in syncProfile(refreshReminders: true) }
-        .onChange(of: events) { _, value in EventStorage.save(value) }
+        .onChange(of: events) { _, value in EventStorage.save(value, celebrate: selected != nil) }
     }
 
     private var dashboard: some View {
@@ -166,6 +139,8 @@ struct CalendarHomeView: View {
                         Button { selected = next } label: {
                             NextDepartureCard(title: next.title, departure: departure)
                         }.buttonStyle(.plain)
+                        .contextMenu { Button("Delete plan", role: .destructive) { deleting = next } }
+                        Button("Delete this plan", role: .destructive) { deleting = next }
                     } else {
                         PlannerEmptyState(title: "Room for your next adventure", message: "Add a plan and we'll help you work out when to head out.", symbol: "sun.horizon")
                     }
@@ -209,7 +184,7 @@ struct CalendarHomeView: View {
         .leaveByColors().navigationTitle("Calendar")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) { Button("Today") { day = .now } }
-            ToolbarItem(placement: .topBarTrailing) { Button("Import") { importing = true } }
+            ToolbarItem(placement: .topBarTrailing) { Button("Sync calendars") { importing = true } }
         }
     }
 
@@ -252,6 +227,21 @@ struct CalendarHomeView: View {
         .contextMenu { Button("Delete plan", role: .destructive) { deleting = event } }
     }
 
+    @State private var refreshing = false
+    private func refreshAll() async {
+        guard !refreshing, selected == nil else { return }
+        refreshing = true
+        defer { refreshing = false }
+        events = EventStorage.load()
+        events = CalendarSync.merge(events)
+        EventStorage.save(events, celebrate: false)
+        BackgroundUpdates.schedule()
+        await BackgroundUpdates.refreshTravel()
+        // Editor may have opened while Maps was working. Bindings always write to disk first.
+        events = EventStorage.load()
+        await refreshReminders()
+    }
+
     private func refreshReminders() async {
         let requests = await UNUserNotificationCenter.current().pendingNotificationRequests()
         reminderIDs = Set(requests.filter { $0.identifier.hasPrefix("leaveby.departure.") }.map(\.identifier))
@@ -267,6 +257,7 @@ struct CalendarHomeView: View {
         Binding(get: { events.first { $0.id == event.id } ?? event }, set: { updated in
             guard let index = events.firstIndex(where: { $0.id == event.id }) else { return }
             events[index] = updated
+            EventStorage.save(events)
         })
     }
 
@@ -277,6 +268,7 @@ struct CalendarHomeView: View {
             event.arrivalTimestamp = Date().addingTimeInterval(3600).timeIntervalSince1970
         }
         events.append(event)
+        EventStorage.save(events)
         selected = event
     }
 
@@ -286,7 +278,9 @@ struct CalendarHomeView: View {
         center.removePendingNotificationRequests(withIdentifiers: [event.reminderIdentifier])
         center.removeDeliveredNotifications(withIdentifiers: [event.reminderIdentifier])
         reminderIDs.remove(event.reminderIdentifier)
+        CalendarSync.suppress(event)
         events.removeAll { $0.id == event.id }
+        EventStorage.save(events)
         deleting = nil
     }
 }

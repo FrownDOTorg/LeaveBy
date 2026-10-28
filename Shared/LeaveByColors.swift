@@ -9,8 +9,9 @@ enum LeaveByColors {
         return result
     }()
     static var selectedID: String {
-        let saved = UserDefaults.standard.string(forKey: themeKey)
-            ?? UserDefaults(suiteName: WidgetStore.group)?.string(forKey: themeKey) ?? "J"
+        let isWidget = Bundle.main.bundleURL.pathExtension == "appex"
+        let saved = (isWidget ? UserDefaults(suiteName: WidgetStore.group)?.string(forKey: themeKey)
+            : UserDefaults.standard.string(forKey: themeKey)) ?? "J"
         return ["R", "J", "Light", "Dark"].contains(saved) ? saved : "J"
     }
     static func color(_ role: String, theme: String? = nil) -> Color {

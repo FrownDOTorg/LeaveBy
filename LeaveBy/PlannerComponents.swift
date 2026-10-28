@@ -54,6 +54,8 @@ struct PlannerSettingsView: View {
     @AppStorage(FriendlyCopy.nameKey) private var name = ""
     @AppStorage(Achievements.enabledKey) private var extras = true
     @Environment(\.openURL) private var openURL
+    @AppStorage("automaticTravelRefresh") private var autoRefresh = true
+    @State private var showSync = false
     let editProfile: () -> Void
     var body: some View {
         Form {
@@ -67,6 +69,13 @@ struct PlannerSettingsView: View {
                     Text("Light · Blue accents").tag("Light")
                     Text("Dark · Blue accents").tag("Dark")
                 }
+            }.listRowBackground(LeaveByColors.card)
+            Section("Places & calendars") {
+                NavigationLink("Home, Work & Gym") { FavoritePlacesView() }
+                Button("Sync Apple calendars") { showSync = true }
+                Toggle("Automatic travel refresh", isOn: $autoRefresh)
+                Text("Refreshes saved routes when you return and when iOS allows background time. Your saved starting point is used; your location is not tracked.")
+                    .font(.footnote).foregroundStyle(LeaveByColors.muted)
             }.listRowBackground(LeaveByColors.card)
             Section("Notifications") {
                 Button("Open notification settings") {
@@ -82,10 +91,12 @@ struct PlannerSettingsView: View {
                     .font(.subheadline).foregroundStyle(LeaveByColors.muted)
             }.listRowBackground(LeaveByColors.card)
             Section("A little about your plans") {
-                Text("Your plans and name stay on this device. Calendar import makes a separate copy, so your original events stay safe.")
-                Text("Apple Maps estimates update when you calculate them. Widgets and reminders use the departure time you saved.")
+                Text("Your plans and name stay on this device. Calendar sync reads selected calendars without changing your original events.")
+                Text("Apple Maps estimates update manually or during automatic refresh. Widgets and reminders use the departure time you saved.")
             }.font(.subheadline).foregroundStyle(LeaveByColors.muted).listRowBackground(LeaveByColors.card)
         }
         .leaveByColors().navigationTitle("Settings")
+        .onChange(of: autoRefresh) { _, _ in BackgroundUpdates.schedule() }
+        .sheet(isPresented: $showSync) { CalendarSyncView {} }
     }
 }

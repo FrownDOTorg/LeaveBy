@@ -6,6 +6,7 @@ struct ProfileView: View {
     @AppStorage(Achievements.enabledKey) private var achievementNotifications = true
     @AppStorage("didChooseName") private var didChooseName = false
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var keyboardFocused: Bool
     @State private var draft = ""
 
     var body: some View {
@@ -15,6 +16,7 @@ struct ProfileView: View {
                     Text("What would you like us to call you?").font(.title2.bold())
                     Text("A first name or nickname is perfect. We'll use it in your greetings and departure reminders.")
                     TextField("Your name or nickname", text: $draft)
+                        .focused($keyboardFocused)
                         .textContentType(.givenName)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
@@ -46,6 +48,8 @@ struct ProfileView: View {
                 }
                 .listRowBackground(LeaveByColors.card)
             }
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Hide keyboard") { keyboardFocused = false } } }
             .leaveByColors()
             .navigationTitle("Make yourself at home")
             .onAppear { draft = savedName }

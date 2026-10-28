@@ -12,6 +12,7 @@ private struct LeaveByAppearance: ViewModifier {
         content.scrollContentBackground(.hidden)
             .background(LeaveByColors.color("background", theme: selectedTheme))
             .foregroundStyle(LeaveByColors.color("text", theme: selectedTheme))
+            .environment(\.leaveByThemeID, selectedTheme)
             .tint(LeaveByColors.color("accent", theme: selectedTheme))
             .preferredColorScheme(selectedTheme == "Light" ? .light : .dark)
             .toolbarBackground(LeaveByColors.card, for: .tabBar, .navigationBar)
@@ -24,11 +25,12 @@ extension View {
 }
 
 struct AchievementCard: View {
+    @Environment(\.leaveByThemeID) private var theme
     let badge: DailyAchievement
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("DAILY ACHIEVEMENT", systemImage: "sparkles")
-                .font(.caption.bold()).foregroundStyle(LeaveByTheme.accent)
+                .font(.caption.bold()).foregroundStyle(LeaveByColors.color("accent", theme: theme))
             Text(badge.title).font(.title3.bold())
             Text(badge.body).font(.subheadline).foregroundStyle(LeaveByColors.muted)
         }
@@ -37,18 +39,27 @@ struct AchievementCard: View {
     }
 }
 struct NextDepartureCard: View {
+    @Environment(\.leaveByThemeID) private var theme
     let title: String
     let departure: Date
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("YOUR NEXT DEPARTURE", systemImage: "figure.walk")
-                .font(.caption.bold()).foregroundStyle(LeaveByTheme.accent)
+                .font(.caption.bold()).foregroundStyle(LeaveByColors.color("accent", theme: theme))
             Text(title.isEmpty ? "Your next plan" : title).font(.title2.bold())
             Text(timerInterval: min(Date.now, departure)...departure, countsDown: true)
-                .font(.largeTitle.bold()).monospacedDigit().foregroundStyle(LeaveByTheme.accent)
+                .font(.largeTitle.bold()).monospacedDigit().foregroundStyle(LeaveByColors.color("accent", theme: theme))
             Text("Leave \(departure.formatted(date: .abbreviated, time: .shortened))")
                 .font(.subheadline).foregroundStyle(LeaveByColors.muted)
         }
         .padding(.vertical, 8)
+    }
+}
+
+private struct LeaveByThemeKey: EnvironmentKey { static let defaultValue = "J" }
+extension EnvironmentValues {
+    var leaveByThemeID: String {
+        get { self[LeaveByThemeKey.self] }
+        set { self[LeaveByThemeKey.self] = newValue }
     }
 }

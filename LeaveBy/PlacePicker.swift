@@ -2,15 +2,20 @@ import SwiftUI
 import MapKit
 
 struct PlacePicker: View {
+    let showsShortcuts: Bool
     let title: String
     let onSelect: (SavedPlace) -> Void
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var location = CurrentPlace()
+    @FocusState private var keyboardFocused: Bool
+    @State private var favorites = FavoritePlaces.load()
     @State private var query = ""
     @State private var results: [MKMapItem] = []
     @State private var searching = false
     @State private var message: String?
 
-    init(title: String, initialQuery: String = "", onSelect: @escaping (SavedPlace) -> Void) {
+    init(title: String, initialQuery: String = "", showsShortcuts: Bool = true, onSelect: @escaping (SavedPlace) -> Void) {
+        self.showsShortcuts = showsShortcuts
         self.title = title
         self.onSelect = onSelect
         self._query = State(initialValue: initialQuery)
@@ -19,8 +24,24 @@ struct PlacePicker: View {
     var body: some View {
         NavigationStack {
             List {
+                if showsShortcuts {
+                    Section("Quick places") {
+                        Button { keyboardFocused = false; location.request() } label: {
+                            if location.busy { ProgressView("Finding you...") }
+                            else { Label("Use My Location", systemImage: "location.fill") }
+                        }.disabled(location.busy)
+                        if let message = location.message { Text(message).font(.footnote).foregroundStyle(LeaveByColors.muted) }
+                        ForEach(FavoritePlaces.names, id: \.self) { name in
+                            if let place = favorites[name] {
+                                Button(name) { onSelect(place); dismiss() }
+                            }
+                        }
+                        NavigationLink("Set up Home, Work & Gym") { FavoritePlacesView() }
+                    }.listRowBackground(LeaveByColors.card)
+                }
+
                 Section {
-                    TextField("Address or place, including city", text: $query)
+                    TextField("Address or place, including city", text: $query).focused($keyboardFocused)
                         .onSubmit { Task { await search() } }
                         .disabled(searching)
                     Button("Search Apple Maps") { Task { await search() } }
@@ -46,9 +67,14 @@ struct PlacePicker: View {
                 }
                 .listRowBackground(LeaveByColors.card)
             }
+            .onAppear { favorites = FavoritePlaces.load() }
+            .scrollDismissesKeyboard(.interactively)
+            .onChange(of: location.place) { _, place in if let place { onSelect(place); dismiss() } }
             .leaveByColors()
             .navigationTitle(title)
-            .toolbar { ToolbarItem(placement: .cancellationAction) {
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Hide keyboard") { keyboardFocused = false } }
+                ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
             } }
         }

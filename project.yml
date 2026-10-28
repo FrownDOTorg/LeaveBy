@@ -26,6 +26,10 @@ targets:
       properties:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleShortVersionString: $(MARKETING_VERSION)
+        NSLocationWhenInUseUsageDescription: "LeaveBy uses your location when you tap My Location to choose a starting point. It does not track your location in the background."
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.leaveby.planner.refresh]
+        ITSAppUsesNonExemptEncryption: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown

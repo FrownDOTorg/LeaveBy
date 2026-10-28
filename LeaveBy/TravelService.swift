@@ -47,7 +47,12 @@ struct TravelService {
         request.destination = destination.mapItem
         request.transportType = walking ? .walking : .automobile
         request.arrivalDate = arriveBy
-        let response = try await MKDirections(request: request).calculateETA()
+        let directions = MKDirections(request: request)
+        let response = try await withTaskCancellationHandler {
+            try await directions.calculateETA()
+        } onCancel: {
+            directions.cancel()
+        }
         return response.expectedTravelTime
     }
 }

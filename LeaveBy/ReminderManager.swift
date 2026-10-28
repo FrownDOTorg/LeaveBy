@@ -35,7 +35,9 @@ final class ReminderManager: ObservableObject {
         let requests = await center.pendingNotificationRequests()
         guard snapshot == revision, !busy else { return }
         denied = settings.authorizationStatus == .denied
-        scheduledDate = (requests.first { $0.identifier == identifier }?.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
+        let trigger = requests.first { $0.identifier == identifier }?.trigger
+        scheduledDate = (trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
+            ?? (trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
     }
 
     func schedule(at date: Date, title: String) async {
@@ -100,6 +102,21 @@ final class ReminderManager: ObservableObject {
             }
             try? await center.add(UNNotificationRequest(identifier: request.identifier, content: content, trigger: trigger))
         }
+    }
+
+    static func updateExisting(_ plan: EventPlan) async {
+        let center = UNUserNotificationCenter.current()
+        let version = mutationVersion
+        let requests = await center.pendingNotificationRequests()
+        guard let old = requests.first(where: { $0.identifier == plan.reminderIdentifier }),
+              let departure = plan.widgetDeparture,
+              let content = old.content.mutableCopy() as? UNMutableNotificationContent,
+              version == mutationVersion else { return }
+        content.title = FriendlyCopy.reminderTitle
+        content.body = FriendlyCopy.reminderBody(eventTitle: plan.title)
+        content.userInfo = ["eventTitle": plan.title]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(5, departure.timeIntervalSinceNow), repeats: false)
+        try? await center.add(UNNotificationRequest(identifier: plan.reminderIdentifier, content: content, trigger: trigger))
     }
 
     func openSettings() {
