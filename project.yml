@@ -21,6 +21,14 @@ targets:
         buildPhase: resources
       - path: Shared
         excludes: ["*.entitlements"]
+    info:
+      path: build/LeaveBy-Info.plist
+      properties:
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
     dependencies:
       - target: LeaveByWidgets
         embed: true

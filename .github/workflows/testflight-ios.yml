@@ -24,6 +24,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Select Xcode 26.3 and verify iOS SDK
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "Selected iOS SDK: $SDK_VERSION"
+          if [ "${SDK_VERSION%%.*}" -lt 26 ]; then
+            echo "::error::App Store Connect requires iOS SDK 26 or newer."
+            exit 1
+          fi
       - name: Install project generator
         run: brew install xcodegen
       - name: Prepare signing and upload
