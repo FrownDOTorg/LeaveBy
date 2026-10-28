@@ -22,6 +22,7 @@ xcodegen generate --spec project-release.json --project .
 xcodebuild -project LeaveBy.xcodeproj -scheme LeaveBy -configuration Release \
   -destination 'generic/platform=iOS' -archivePath build/LeaveBy.xcarchive \
   -derivedDataPath build/DerivedData archive
+python3 scripts/ios/verify_archive.py
 xcodebuild -exportArchive -archivePath build/LeaveBy.xcarchive \
   -exportPath build/export -exportOptionsPlist build/ExportOptions.plist \
   -authenticationKeyPath "$RUNNER_TEMP/leaveby-signing/AuthKey_${ASC_KEY_ID}.p8" \

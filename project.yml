@@ -24,6 +24,8 @@ targets:
     info:
       path: build/LeaveBy-Info.plist
       properties:
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
@@ -54,6 +56,8 @@ targets:
     info:
       path: LeaveByWidgets/Info.plist
       properties:
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleDisplayName: LeaveBy
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
