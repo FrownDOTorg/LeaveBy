@@ -15,3 +15,10 @@ android/**/build/
 android/local.properties
 *.keystore
 *.jks
+
+# Local signing and generated release configuration
+*.p8
+*.pem
+project-release.json
+IOS_*_BASE64.txt
+IOS_CERTIFICATE_PASSWORD.txt

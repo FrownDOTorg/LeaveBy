@@ -1,0 +1,37 @@
+name: Upload iOS to TestFlight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: leaveby-testflight
+  cancel-in-progress: false
+jobs:
+  upload:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      APPLE_TEAM_ID: WCL29SZ993
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      IOS_APP_PROFILE_BASE64: ${{ secrets.IOS_APP_PROFILE_BASE64 }}
+      IOS_WIDGET_PROFILE_BASE64: ${{ secrets.IOS_WIDGET_PROFILE_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install project generator
+        run: brew install xcodegen
+      - name: Prepare signing and upload
+        run: bash scripts/ios/testflight.sh
+      - name: Remove temporary signing material
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/leaveby-signing.keychain-db" 2>/dev/null || true
+          rm -rf "$RUNNER_TEMP/leaveby-signing"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/leaveby-app.mobileprovision"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/leaveby-widget.mobileprovision"
